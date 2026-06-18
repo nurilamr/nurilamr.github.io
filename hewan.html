@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hewan - Virtual Mouse AI</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js">
+    </script>
+
+    <style>
+        /* ── Cursor virtual ── */
+        #cursor {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: red;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 999999;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px red;
+        }
+
+        /* ── Frame overlay ── */
+        #frameOverlay {
+            position: absolute;
+            inset: 0;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: scaleX(-1);
+            display: none;
+            border-radius: 15px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* ── Video mirror ── */
+        #video {
+            transform: scaleX(-1);
+        }
+
+        /* ── Slot upload button ── */
+        .frame-slot:hover .frame-upload-btn {
+            opacity: 1;
+        }
+        .frame-upload-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .frame-file-input {
+            display: none;
+        }
+        .frame-slot.active .check-mark {
+            display: flex;
+        }
+        .check-mark {
+            display: none;
+        }
+
+        /* ── Animal card hover ── */
+        .animal-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .animal-card:hover {
+            transform: translateY(-4px);
+            border-color: #3b82f6;
+            box-shadow: 0 8px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        /* ── Modal overlay ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #1e293b;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            animation: slideUp 0.35s ease;
+            position: relative;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #334155;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #ef4444;
+            transform: rotate(90deg);
+        }
+        .modal-emoji {
+            font-size: 72px;
+            text-align: center;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            color: white;
+        }
+        .modal-subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+        .modal-divider {
+            border: none;
+            border-top: 2px solid #334155;
+            margin: 16px 0;
+        }
+        .modal-detail {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            color: #cbd5e1;
+            font-size: 15px;
+        }
+        .modal-detail i {
+            width: 24px;
+            color: #3b82f6;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .modal-funfact {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            border-left: 4px solid #eab308;
+            color: #facc15;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .modal-funfact i {
+            margin-right: 8px;
+        }
+
+        /* ── Scrollbar modal ── */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        /* ── Responsive animal grid ── */
+        @media (max-width: 640px) {
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
+            .modal-emoji {
+                font-size: 48px;
+            }
+            .modal-title {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white font-sans antialiased min-h-screen">
+
+    <!-- ─── MAIN LAYOUT ─── -->
+    <div class="flex flex-col lg:flex-row items-start justify-center gap-6 p-4 md:p-6 lg:p-8 min-h-screen">
+
+        <!-- ─── MENU (kiri) ─── -->
+        <div class="w-full max-w-md lg:max-w-sm xl:max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 flex-shrink-0 sticky top-4">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center text-3xl mb-4 shadow-lg">
+                    <i class="fa-solid fa-paw"></i>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold mb-1">Dunia Hewan</h1>
+                <p class="text-slate-300 text-sm md:text-base mb-4">Kenali 10 hewan menarik dari seluruh dunia</p>
+
+                <div class="flex flex-col gap-2 w-full text-sm text-slate-400 bg-slate-900/50 rounded-xl p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span><i class="fa-regular fa-circle-check text-emerald-400 mr-1"></i> Total hewan</span>
+                        <span class="text-white font-bold">10</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span><i class="fa-regular fa-compass text-blue-400 mr-1"></i> Dari berbagai benua</span>
+                        <span class="text-white font-bold">6</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span><i class="fa-regular fa-star text-yellow-400 mr-1"></i> Klik kartu untuk detail</span>
+                        <span class="text-white font-bold"><i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+
+                <!-- Tombol kembali ke option -->
+                <a href="option.html" class="w-full inline-flex items-center justify-center gap-2 h-12 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition-all text-base">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </div>
+
+        <!-- ─── KANAN: KAMERA + GRID HEWAN ─── -->
+        <div class="flex-1 w-full max-w-3xl">
+
+            <!-- Camera Box -->
+            <div class="bg-slate-800 rounded-2xl shadow-2xl p-4 mb-6">
+                <div class="relative w-full max-w-[640px] mx-auto rounded-xl overflow-hidden bg-black">
+                    <video id="video" autoplay playsinline muted class="w-full h-auto aspect-video block object-cover"></video>
+                    <div id="frameOverlay"></div>
+                </div>
+
+                <!-- Frame Selector -->
+                <div class="w-full max-w-[640px] mx-auto mt-4 bg-slate-900 rounded-xl p-3 border border-slate-700">
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
+                        <i class="fa-regular fa-image mr-1"></i> Pilih Frame
+                    </div>
+                    <div id="frameSlots" class="flex flex-wrap justify-center gap-3 md:gap-4">
+                        <!-- 5 slots generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── GRID HEWAN (10 kartu) ─── -->
+            <div class="bg-slate-800 rounded-2xl shadow-2xl p-5 md:p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-emerald-400"></i>
+                    Daftar Hewan
+                    <span class="text-sm font-normal text-slate-400 ml-auto">Klik kartu untuk detail</span>
+                </h2>
+                <div id="animalGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <!-- Akan di-generate oleh JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ─── CURSOR ─── -->
+    <div id="cursor"></div>
+
+    <!-- ─── MODAL ─── -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <span id="modalEmoji" class="modal-emoji">🐾</span>
+            <h2 id="modalTitle" class="modal-title">Nama Hewan</h2>
+            <p id="modalSubtitle" class="modal-subtitle">Nama ilmiah</p>
+            <hr class="modal-divider" />
+            <div id="modalDetails">
+                <div class="modal-detail"><i class="fa-solid fa-earth-asia"></i> <span id="modalHabitat">Habitat</span></div>
+                <div class="modal-detail"><i class="fa-solid fa-utensils"></i> <span id="modalDiet">Makanan</span></div>
+                <div class="modal-detail"><i class="fa-solid fa-ruler"></i> <span id="modalSize">Ukuran</span></div>
+                <div class="modal-detail"><i class="fa-solid fa-clock"></i> <span id="modalLifespan">Umur</span></div>
+            </div>
+            <div id="modalFunfact" class="modal-funfact">
+                <i class="fa-solid fa-lightbulb"></i> <span id="modalFact">Fakta menarik</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        // 1. DATA HEWAN (10 hewan dengan detail lengkap)
+        // ================================================================
+
+        const animals = [{
+            id: 1,
+            name: 'Singa',
+            scientific: 'Panthera leo',
+            emoji: '🦁',
+            habitat: 'Savana dan padang rumput di Afrika',
+            diet: 'Karnivora (mamalia besar seperti zebra, rusa)',
+            size: 'Panjang 1.4–2.5 m, berat 120–250 kg',
+            lifespan: '10–14 tahun (liar), hingga 20 tahun (penangkaran)',
+            funfact: 'Singa betina adalah pemburu utama dalam kelompok. Mereka bekerja sama untuk menjatuhkan mangsa yang lebih besar!'
+        }, {
+            id: 2,
+            name: 'Gajah Afrika',
+            scientific: 'Loxodonta africana',
+            emoji: '🐘',
+            habitat: 'Savana, hutan, dan padang rumput di Afrika sub-Sahara',
+            diet: 'Herbivora (rumput, daun, buah, kulit kayu)',
+            size: 'Tinggi 3–4 m, berat 4.000–7.000 kg',
+            lifespan: '60–70 tahun',
+            funfact: 'Gajah memiliki ingatan yang luar biasa dan dapat mengenali keluarga mereka bahkan setelah bertahun-tahun berpisah!'
+        }, {
+            id: 3,
+            name: 'Jerapah',
+            scientific: 'Giraffa camelopardalis',
+            emoji: '🦒',
+            habitat: 'Savana dan hutan terbuka di Afrika',
+            diet: 'Herbivora (daun, terutama dari pohon akasia)',
+            size: 'Tinggi 4.3–5.7 m, berat 800–1.200 kg',
+            lifespan: '20–25 tahun',
+            funfact: 'Jerapah memiliki lidah sepanjang 45–50 cm yang digunakan untuk meraih daun di dahan tinggi!'
+        }, {
+            id: 4,
+            name: 'Harimau Sumatra',
+            scientific: 'Panthera tigris sumatrae',
+            emoji: '🐯',
+            habitat: 'Hutan hujan tropis di Pulau Sumatra, Indonesia',
+            diet: 'Karnivora (rusa, babi hutan, dan hewan kecil)',
+            size: 'Panjang 2.2–2.5 m, berat 100–140 kg',
+            lifespan: '10–15 tahun',
+            funfact: 'Harimau Sumatra adalah subspesies harimau terkecil yang masih bertahan. Populasinya saat ini hanya sekitar 400–500 ekor!'
+        }, {
+            id: 5,
+            name: 'Panda Raksasa',
+            scientific: 'Ailuropoda melanoleuca',
+            emoji: '🐼',
+            habitat: 'Pegunungan bambu di Tiongkok tengah',
+            diet: 'Herbivora (99% bambu, kadang serangga dan telur)',
+            size: 'Tinggi 1.2–1.9 m, berat 70–160 kg',
+            lifespan: '14–20 tahun (liar), hingga 30 tahun (penangkaran)',
+            funfact: 'Panda memiliki jempol "palsu" yang merupakan perpanjangan tulang pergelangan tangan untuk membantu memegang bambu!'
+        }, {
+            id: 6,
+            name: 'Lumba-lumba Hidung Botol',
+            scientific: 'Tursiops truncatus',
+            emoji: '🐬',
+            habitat: 'Perairan hangat dan sedang di seluruh dunia',
+            diet: 'Karnivora (ikan, cumi-cumi, dan krustasea)',
+            size: 'Panjang 2–4 m, berat 150–650 kg',
+            lifespan: '40–50 tahun',
+            funfact: 'Lumba-lumba menggunakan ekolokasi untuk "melihat" di bawah air dan dapat berkomunikasi dengan peluit yang unik seperti nama!'
+        }, {
+            id: 7,
+            name: 'Elang Botak',
+            scientific: 'Haliaeetus leucocephalus',
+            emoji: '🦅',
+            habitat: 'Dekat perairan di Amerika Utara',
+            diet: 'Karnivora (ikan, burung, dan mamalia kecil)',
+            size: 'Lebar sayap 1.8–2.4 m, berat 3–6.3 kg',
+            lifespan: '20–30 tahun',
+            funfact: 'Elang botak adalah simbol nasional Amerika Serikat. Mereka dapat terbang dengan kecepatan hingga 120 km/jam saat menyambar mangsa!'
+        }, {
+            id: 8,
+            name: 'Kucing Persia',
+            scientific: 'Felis catus',
+            emoji: '🐱',
+            habitat: 'Hewan peliharaan di seluruh dunia',
+            diet: 'Karnivora (daging, makanan kucing komersial)',
+            size: 'Panjang 40–50 cm, berat 3–5 kg',
+            lifespan: '12–17 tahun',
+            funfact: 'Kucing Persia dikenal dengan bulu panjang dan wajah datarnya. Mereka adalah salah satu ras kucing tertua di dunia!'
+        }, {
+            id: 9,
+            name: 'Anjing Golden Retriever',
+            scientific: 'Canis familiaris',
+            emoji: '🐕',
+            habitat: 'Hewan peliharaan di seluruh dunia',
+            diet: 'Omnivora (daging, sayuran, makanan anjing)',
+            size: 'Tinggi 51–61 cm, berat 25–34 kg',
+            lifespan: '10–12 tahun',
+            funfact: 'Golden Retriever adalah anjing yang sangat cerdas dan sering digunakan sebagai anjing pemandu, anjing penyelamat, dan anjing terapi!'
+        }, {
+            id: 10,
+            name: 'Kelinci Eropa',
+            scientific: 'Oryctolagus cuniculus',
+            emoji: '🐰',
+            habitat: 'Padang rumput dan hutan di Eropa dan Australia',
+            diet: 'Herbivora (rumput, daun, sayuran)',
+            size: 'Panjang 34–50 cm, berat 1.5–2.5 kg',
+            lifespan: '4–8 tahun (liar), hingga 10 tahun (penangkaran)',
+            funfact: 'Kelinci memiliki penglihatan hampir 360 derajat dan dapat melompat setinggi 1 meter untuk menghindari predator!'
+        }];
+
+        // ================================================================
+        // 2. RENDER GRID HEWAN
+        // ================================================================
+
+        const animalGrid = document.getElementById('animalGrid');
+
+        function renderAnimals() {
+            animalGrid.innerHTML = '';
+            animals.forEach((animal, index) => {
+                const card = document.createElement('div');
+                card.className =
+                    'animal-card bg-slate-700/50 border border-slate-600 rounded-xl p-4 text-center transition-all hover:bg-slate-700 hover:border-blue-500';
+                card.innerHTML = `
+                        <div class="text-4xl md:text-5xl mb-2">${animal.emoji}</div>
+                        <div class="font-semibold text-sm md:text-base truncate">${animal.name}</div>
+                        <div class="text-xs text-slate-400 italic truncate">${animal.scientific}</div>
+                        <div class="mt-2 text-xs text-emerald-400">
+                            <i class="fa-regular fa-circle-play"></i> Detail
+                        </div>
+                    `;
+                card.addEventListener('click', function(e) {
+                    // Cegah jika ada interaksi lain
+                    openModal(animal);
+                });
+                animalGrid.appendChild(card);
+            });
+        }
+
+        // ================================================================
+        // 3. MODAL
+        // ================================================================
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalEmoji = document.getElementById('modalEmoji');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSubtitle = document.getElementById('modalSubtitle');
+        const modalHabitat = document.getElementById('modalHabitat');
+        const modalDiet = document.getElementById('modalDiet');
+        const modalSize = document.getElementById('modalSize');
+        const modalLifespan = document.getElementById('modalLifespan');
+        const modalFact = document.getElementById('modalFact');
+
+        function openModal(animal) {
+            modalEmoji.textContent = animal.emoji;
+            modalTitle.textContent = animal.name;
+            modalSubtitle.textContent = animal.scientific;
+            modalHabitat.textContent = animal.habitat;
+            modalDiet.textContent = animal.diet;
+            modalSize.textContent = animal.size;
+            modalLifespan.textContent = animal.lifespan;
+            modalFact.textContent = animal.funfact;
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== modalOverlay && e.target !== e.currentTarget) return;
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Tutup dengan tombol Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // ================================================================
+        // 4. DEKLARASI GLOBAL VIRTUAL MOUSE
+        // ================================================================
+
+        const cursor = document.getElementById('cursor');
+        const video = document.getElementById('video');
+        const frameOverlay = document.getElementById('frameOverlay');
+        const frameSlots = document.getElementById('frameSlots');
+
+        let camera = null;
+        let clickCooldown = false;
+        let filterCooldown = false;
+        let photoCooldown = false;
+        let isVirtualMouseActive = true;
+        let handsInstance = null;
+
+        const frameData = [];
+        let activeFrameIndex = -1;
+
+        // ================================================================
+        // 5. GENERATE DEFAULT FRAMES
+        // ================================================================
+
+        function generateDefaultFrames() {
+            const colors = [
+                { bg: '#1e3a5f', border: '#3b82f6', accent: '#60a5fa' },
+                { bg: '#3b1e2e', border: '#ec4899', accent: '#f472b6' },
+                { bg: '#1e3b2a', border: '#22c55e', accent: '#4ade80' },
+                { bg: '#3b2e1e', border: '#eab308', accent: '#facc15' },
+                { bg: '#2e1e3b', border: '#a855f7', accent: '#c084fc' },
+            ];
+            const frames = [];
+            for (let i = 0; i < 5; i++) {
+                const c = document.createElement('canvas');
+                c.width = 200;
+                c.height = 200;
+                const ctx = c.getContext('2d');
+                const col = colors[i % colors.length];
+                ctx.clearRect(0, 0, 200, 200);
+                const pad = 16,
+                    radius = 28,
+                    w = 200 - pad * 2,
+                    h = 200 - pad * 2;
+                ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = 20;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 4;
+                ctx.beginPath();
+                ctx.roundRect(pad, pad, w, h, radius);
+                ctx.fillStyle = col.bg;
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = col.border;
+                ctx.beginPath();
+                ctx.roundRect(pad, pad, w, h, radius);
+                ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = col.accent;
+                const inset = 10;
+                ctx.beginPath();
+                ctx.roundRect(pad + inset, pad + inset, w - inset * 2, h - inset * 2, radius - 6);
+                ctx.stroke();
+                const cornerSize = 22;
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = col.accent;
+                const corners = [
+                    [pad + 6, pad + 6, 1, 1],
+                    [pad + w - 6, pad + 6, -1, 1],
+                    [pad + 6, pad + h - 6, 1, -1],
+                    [pad + w - 6, pad + h - 6, -1, -1]
+                ];
+                for (const [cx, cy, dx, dy] of corners) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx + dx * cornerSize, cy);
+                    ctx.lineTo(cx, cy);
+                    ctx.lineTo(cx, cy + dy * cornerSize);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(`Frame ${i+1}`, 100, 190);
+                frames.push(c.toDataURL('image/png'));
+            }
+            return frames;
+        }
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (typeof r === 'number') r = [r];
+                const radii = r.map(v => Math.min(v, Math.min(w, h) / 2));
+                const tl = radii[0] || 0,
+                    tr = radii[1] || tl,
+                    br = radii[2] || tl,
+                    bl = radii[3] || tl;
+                this.moveTo(x + tl, y);
+                this.arcTo(x + w, y, x + w, y + h, tr);
+                this.arcTo(x + w, y + h, x, y + h, br);
+                this.arcTo(x, y + h, x, y, bl);
+                this.arcTo(x, y, x + w, y, tl);
+                this.closePath();
+                return this;
+            };
+        }
+
+        const defaultFrames = generateDefaultFrames();
+
+        function initFrameSlots() {
+            frameSlots.innerHTML = '';
+            frameData.length = 0;
+            for (let i = 0; i < 5; i++) {
+                const dataURL = defaultFrames[i] || '';
+                frameData.push({ dataURL, file: null });
+                const slot = document.createElement('div');
+                slot.className =
+                    'frame-slot relative w-16 h-16 md:w-20 md:h-20 rounded-xl border-3 border-slate-600 bg-slate-700 cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-slate-400 hover:scale-105';
+                slot.dataset.index = i;
+                const img = document.createElement('img');
+                img.src = dataURL;
+                img.alt = `Frame ${i+1}`;
+                img.draggable = false;
+                img.className = 'w-full h-full object-cover rounded-lg';
+                slot.appendChild(img);
+                const label = document.createElement('span');
+                label.className =
+                    'absolute bottom-0.5 right-1 text-[10px] font-bold text-white/60 bg-black/50 px-1.5 rounded';
+                label.textContent = `${i+1}`;
+                slot.appendChild(label);
+                const check = document.createElement('span');
+                check.className =
+                    'check-mark absolute bottom-0.5 left-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center';
+                check.innerHTML = '✓';
+                slot.appendChild(check);
+                const uploadBtn = document.createElement('button');
+                uploadBtn.className =
+                    'frame-upload-btn absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-blue-600 transition-opacity';
+                uploadBtn.innerHTML = '<i class="fa-solid fa-upload"></i>';
+                uploadBtn.type = 'button';
+                slot.appendChild(uploadBtn);
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.className = 'frame-file-input';
+                fileInput.dataset.index = i;
+                slot.appendChild(fileInput);
+                slot.addEventListener('click', function(e) {
+                    if (e.target.closest('.frame-upload-btn')) return;
+                    selectFrame(i);
+                });
+                uploadBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+                fileInput.addEventListener('change', function(e) {
+                    const idx = parseInt(this.dataset.index);
+                    const file = this.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const data = ev.target.result;
+                        frameData[idx].dataURL = data;
+                        frameData[idx].file = file;
+                        const imgEl = slot.querySelector('img');
+                        if (imgEl) imgEl.src = data;
+                        if (activeFrameIndex === idx) applyFrameOverlay(data);
+                        fileInput.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                });
+                frameSlots.appendChild(slot);
+            }
+            selectFrame(0);
+        }
+
+        function selectFrame(index) {
+            document.querySelectorAll('.frame-slot').forEach(el => el.classList.remove('active'));
+            const slots = document.querySelectorAll('.frame-slot');
+            if (slots[index]) {
+                slots[index].classList.add('active');
+                activeFrameIndex = index;
+                const data = frameData[index]?.dataURL;
+                if (data) applyFrameOverlay(data);
+                else clearFrameOverlay();
+            } else {
+                activeFrameIndex = -1;
+                clearFrameOverlay();
+            }
+        }
+
+        function applyFrameOverlay(dataURL) {
+            if (!frameOverlay) return;
+            if (dataURL) {
+                frameOverlay.style.backgroundImage = `url(${dataURL})`;
+                frameOverlay.style.display = 'block';
+            } else clearFrameOverlay();
+        }
+
+        function clearFrameOverlay() {
+            if (!frameOverlay) return;
+            frameOverlay.style.backgroundImage = '';
+            frameOverlay.style.display = 'none';
+        }
+
+        // ================================================================
+        // 6. VIRTUAL MOUSE - MEDIAPIPE HANDS
+        // ================================================================
+
+        function initVirtualMouse() {
+            if (!video) return;
+            try {
+                handsInstance = new Hands({
+                    locateFile: function(file) {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                    }
+                });
+                handsInstance.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                handsInstance.onResults(function(results) {
+                    if (!isVirtualMouseActive) {
+                        if (cursor) cursor.style.display = 'none';
+                        return;
+                    }
+                    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+                    const hand = results.multiHandLandmarks[0];
+                    const indexFinger = hand[8];
+                    const x = (1 - indexFinger.x) * window.innerWidth;
+                    const y = indexFinger.y * window.innerHeight;
+                    if (cursor) {
+                        cursor.style.display = 'block';
+                        cursor.style.left = x + 'px';
+                        cursor.style.top = y + 'px';
+                    }
+                    let fingerCount = 0;
+                    if (hand[8].y < hand[6].y) fingerCount++;
+                    if (hand[12].y < hand[10].y) fingerCount++;
+                    if (hand[16].y < hand[14].y) fingerCount++;
+                    if (hand[20].y < hand[18].y) fingerCount++;
+                    if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
+
+                    // 2 jari = klik
+                    if (fingerCount === 2 && !clickCooldown) {
+                        clickCooldown = true;
+                        const element = document.elementFromPoint(x, y);
+                        if (element && element !== cursor) {
+                            element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                            console.log('Klik pada:', element.tagName, element.className || '');
+                        }
+                        setTimeout(() => { clickCooldown = false; }, 800);
+                    }
+
+                    // 4 jari = next animal (jika ada fungsi)
+                    if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
+                        filterCooldown = true;
+                        window.nextAnimal();
+                        setTimeout(() => { filterCooldown = false; }, 1500);
+                    }
+
+                    // 5 jari = foto (jika ada)
+                    if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
+                        photoCooldown = true;
+                        window.startCountdown();
+                        setTimeout(() => { photoCooldown = false; }, 7000);
+                    }
+                });
+
+                camera = new Camera(video, {
+                    onFrame: async function() {
+                        if (handsInstance) await handsInstance.send({ image: video });
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+                console.log('Virtual Mouse Aktif — hewan.html');
+
+            } catch (err) {
+                console.error('Gagal inisialisasi MediaPipe:', err);
+            }
+        }
+
+        // ================================================================
+        // 7. KAMERA DISPLAY
+        // ================================================================
+
+        function startCameraDisplay() {
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+                .then(stream => {
+                    if (video) video.srcObject = stream;
+                })
+                .catch(err => {
+                    console.error('Gagal akses kamera:', err);
+                });
+        }
+
+        // ================================================================
+        // 8. INISIALISASI
+        // ================================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAnimals();
+            initFrameSlots();
+            startCameraDisplay();
+            initVirtualMouse();
+            if (cursor) cursor.style.display = 'block';
+            console.log('Hewan.html siap — 10 hewan dengan modal detail!');
+        });
+
+        // ── Resize handler ──
+        window.addEventListener('resize', function() {});
+
+        // ── Expose toggle virtual mouse (untuk konsistensi) ──
+        window.toggleVirtualMouse = function() {
+            isVirtualMouseActive = !isVirtualMouseActive;
+            if (isVirtualMouseActive) {
+                if (handsInstance) handsInstance.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5 });
+                if (cursor) cursor.style.display = 'block';
+                console.log('Virtual Mouse: AKTIF');
+            } else {
+                if (handsInstance) handsInstance.setOptions({ maxNumHands: 0, modelComplexity: 0, minDetectionConfidence: 0,
+                    minTrackingConfidence: 0 });
+                if (cursor) cursor.style.display = 'none';
+                console.log('Virtual Mouse: NONAKTIF');
+            }
+        };
+
+        console.log('🐾 Hewan.html — 10 hewan dengan detail lengkap!');
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Mouse AI</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js">
+    </script>
+    <!-- Custom tiny styles for cursor & frame overlay (Tailwind can't cover all) -->
+    <style>
+        /* Cursor – fully Tailwind except transform origin */
+        #cursor {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: red;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 999999;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px red;
+        }
+        /* Frame overlay – background image set by JS */
+        #frameOverlay {
+            position: absolute;
+            inset: 0;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: scaleX(-1);
+            display: none;
+            border-radius: 15px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        /* Ensure video mirror */
+        #video {
+            transform: scaleX(-1);
+        }
+        /* Slot upload button visibility on hover */
+        .frame-slot:hover .frame-upload-btn {
+            opacity: 1;
+        }
+        .frame-upload-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        /* Hide file input */
+        .frame-file-input {
+            display: none;
+        }
+        /* Active frame check mark */
+        .frame-slot.active .check-mark {
+            display: flex;
+        }
+        .check-mark {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white font-sans antialiased min-h-screen">
+
+    <!-- ─── MAIN LAYOUT ─── -->
+    <div class="flex flex-col lg:flex-row items-center justify-center gap-6 p-4 md:p-6 lg:p-8 min-h-screen">
+
+        <!-- ─── MENU (kiri) ─── -->
+        <div class="w-full max-w-md lg:max-w-sm xl:max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 flex-shrink-0">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-3xl mb-4 shadow-lg">
+                    <i class="fa-solid fa-hand"></i>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold mb-1">Virtual Mouse AI</h1>
+                <p class="text-slate-300 text-sm md:text-base mb-5">Kontrol website menggunakan tangan</p>
+
+                <input type="text" id="nameInput" placeholder="Masukkan Nama" readonly
+                class="w-full h-12 md:h-14 border-none outline-none rounded-xl px-4 text-base md:text-lg bg-white text-slate-900 mb-5" />
+
+                <div class="flex flex-col gap-3 w-full">
+                    <button onclick="toggleKeyboard()"
+                    class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
+                    ⌨️ Keyboard
+                </button>
+                <button onclick="toggleVirtualMouse()"
+                class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
+                🖱️ Virtual Mouse
+            </button>
+            <button onclick="startGame()"
+            class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
+            🚀 Mulai
+        </button>
+    </div>
+
+    <!-- Virtual Keyboard -->
+    <div id="keyboard" class="grid grid-cols-10 gap-2 mt-5" style="display:none"></div>
+</div>
+</div>
+
+<!-- ─── CAMERA BOX (kanan) ─── -->
+<div class="w-full max-w-2xl bg-slate-800 rounded-2xl shadow-2xl p-4 flex flex-col items-center">
+    <div class="relative w-full max-w-[640px] rounded-xl overflow-hidden bg-black">
+        <video id="video" autoplay playsinline muted class="w-full h-auto aspect-video block object-cover"></video>
+        <div id="frameOverlay"></div>
+    </div>
+
+    <!-- FRAME SELECTOR -->
+    <div class="w-full max-w-[640px] mt-4 bg-slate-900 rounded-xl p-3 border border-slate-700">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
+            <i class="fa-regular fa-image mr-1"></i> Pilih Frame
+        </div>
+        <div id="frameSlots" class="flex flex-wrap justify-center gap-3 md:gap-4">
+            <!-- 5 slots will be generated by JS -->
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- ─── CURSOR ─── -->
+<div id="cursor"></div>
+
+<script>
+    // ================================================================
+    // 1. DEKLARASI GLOBAL (sama seperti sebelumnya)
+    // ================================================================
+
+    const cursor = document.getElementById('cursor');
+    const video = document.getElementById('video');
+    const input = document.getElementById('nameInput');
+    const keyboard = document.getElementById('keyboard');
+    const frameOverlay = document.getElementById('frameOverlay');
+    const frameSlots = document.getElementById('frameSlots');
+
+    let camera = null;
+    let clickCooldown = false;
+    let filterCooldown = false;
+    let photoCooldown = false;
+    let isVirtualMouseActive = true;
+    let handsInstance = null;
+
+    const frameData = [];
+    let activeFrameIndex = -1;
+
+    // ================================================================
+    // 2. GENERATE DEFAULT FRAMES (canvas)
+    // ================================================================
+
+    function generateDefaultFrames() {
+        const colors = [
+            { bg: '#1e3a5f', border: '#3b82f6', accent: '#60a5fa' },
+            { bg: '#3b1e2e', border: '#ec4899', accent: '#f472b6' },
+            { bg: '#1e3b2a', border: '#22c55e', accent: '#4ade80' },
+            { bg: '#3b2e1e', border: '#eab308', accent: '#facc15' },
+            { bg: '#2e1e3b', border: '#a855f7', accent: '#c084fc' },
+        ];
+
+        const frames = [];
+        for (let i = 0; i < 5; i++) {
+            const c = document.createElement('canvas');
+            c.width = 200;
+            c.height = 200;
+            const ctx = c.getContext('2d');
+            const col = colors[i % colors.length];
+
+            ctx.clearRect(0, 0, 200, 200);
+            const pad = 16;
+            const radius = 28;
+            const w = 200 - pad * 2;
+            const h = 200 - pad * 2;
+
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 4;
+
+            ctx.beginPath();
+            ctx.roundRect(pad, pad, w, h, radius);
+            ctx.fillStyle = col.bg;
+            ctx.fill();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = col.border;
+            ctx.beginPath();
+            ctx.roundRect(pad, pad, w, h, radius);
+            ctx.stroke();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = col.accent;
+            const inset = 10;
+            ctx.beginPath();
+            ctx.roundRect(pad + inset, pad + inset, w - inset * 2, h - inset * 2, radius - 6);
+            ctx.stroke();
+
+            const cornerSize = 22;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = col.accent;
+            const corners = [
+                [pad + 6, pad + 6, 1, 1],
+                [pad + w - 6, pad + 6, -1, 1],
+                [pad + 6, pad + h - 6, 1, -1],
+                [pad + w - 6, pad + h - 6, -1, -1]
+            ];
+            for (const [cx, cy, dx, dy] of corners) {
+                ctx.beginPath();
+                ctx.moveTo(cx + dx * cornerSize, cy);
+                ctx.lineTo(cx, cy);
+                ctx.lineTo(cx, cy + dy * cornerSize);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(`Frame ${i+1}`, 100, 190);
+
+            frames.push(c.toDataURL('image/png'));
+        }
+        return frames;
+    }
+
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (typeof r === 'number') r = [r];
+            const radii = r.map(v => Math.min(v, Math.min(w, h) / 2));
+            const tl = radii[0] || 0;
+            const tr = radii[1] || tl;
+            const br = radii[2] || tl;
+            const bl = radii[3] || tl;
+            this.moveTo(x + tl, y);
+            this.arcTo(x + w, y, x + w, y + h, tr);
+            this.arcTo(x + w, y + h, x, y + h, br);
+            this.arcTo(x, y + h, x, y, bl);
+            this.arcTo(x, y, x + w, y, tl);
+            this.closePath();
+            return this;
+        };
+    }
+
+    // ================================================================
+    // 3. INISIALISASI FRAME SLOTS (dengan Tailwind classes)
+    // ================================================================
+
+    const defaultFrames = generateDefaultFrames();
+
+    function initFrameSlots() {
+        frameSlots.innerHTML = '';
+        frameData.length = 0;
+
+        for (let i = 0; i < 5; i++) {
+            const dataURL = defaultFrames[i] || '';
+            frameData.push({ dataURL, file: null });
+
+            const slot = document.createElement('div');
+            slot.className =
+                'frame-slot relative w-16 h-16 md:w-20 md:h-20 rounded-xl border-3 border-slate-600 bg-slate-700 cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-slate-400 hover:scale-105';
+            slot.dataset.index = i;
+
+            const img = document.createElement('img');
+            img.src = dataURL;
+            img.alt = `Frame ${i+1}`;
+            img.draggable = false;
+            img.className = 'w-full h-full object-cover rounded-lg';
+            slot.appendChild(img);
+
+            const label = document.createElement('span');
+            label.className = 'absolute bottom-0.5 right-1 text-[10px] font-bold text-white/60 bg-black/50 px-1.5 rounded';
+            label.textContent = `${i+1}`;
+            slot.appendChild(label);
+
+            const check = document.createElement('span');
+            check.className =
+            'check-mark absolute bottom-0.5 left-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center';
+            check.innerHTML = '✓';
+            slot.appendChild(check);
+
+            const uploadBtn = document.createElement('button');
+            uploadBtn.className =
+                'frame-upload-btn absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-blue-600 transition-opacity';
+            uploadBtn.innerHTML = '<i class="fa-solid fa-upload"></i>';
+            uploadBtn.type = 'button';
+            slot.appendChild(uploadBtn);
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.className = 'frame-file-input';
+            fileInput.dataset.index = i;
+            slot.appendChild(fileInput);
+
+            slot.addEventListener('click', function(e) {
+                if (e.target.closest('.frame-upload-btn')) return;
+                selectFrame(i);
+            });
+
+            uploadBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function(e) {
+                const idx = parseInt(this.dataset.index);
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const data = ev.target.result;
+                    frameData[idx].dataURL = data;
+                    frameData[idx].file = file;
+                    const imgEl = slot.querySelector('img');
+                    if (imgEl) imgEl.src = data;
+                    if (activeFrameIndex === idx) {
+                        applyFrameOverlay(data);
+                    }
+                    fileInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            frameSlots.appendChild(slot);
+        }
+
+        selectFrame(0);
+    }
+
+    // ================================================================
+    // 4. FUNGSI FRAME
+    // ================================================================
+
+    function selectFrame(index) {
+        document.querySelectorAll('.frame-slot').forEach(el => el.classList.remove('active'));
+        const slots = document.querySelectorAll('.frame-slot');
+        if (slots[index]) {
+            slots[index].classList.add('active');
+            activeFrameIndex = index;
+            const data = frameData[index]?.dataURL;
+            if (data) applyFrameOverlay(data);
+            else clearFrameOverlay();
+        } else {
+            activeFrameIndex = -1;
+            clearFrameOverlay();
+        }
+    }
+
+    function applyFrameOverlay(dataURL) {
+        if (!frameOverlay) return;
+        if (dataURL) {
+            frameOverlay.style.backgroundImage = `url(${dataURL})`;
+            frameOverlay.style.display = 'block';
+        } else {
+            clearFrameOverlay();
+        }
+    }
+
+    function clearFrameOverlay() {
+        if (!frameOverlay) return;
+        frameOverlay.style.backgroundImage = '';
+        frameOverlay.style.display = 'none';
+    }
+
+    // ================================================================
+    // 5. PHOTOBOOTH FRAME DRAW (untuk canvas)
+    // ================================================================
+
+    function drawFrameOnCanvas(ctx, canvasWidth, canvasHeight) {
+        if (activeFrameIndex < 0 || !frameData[activeFrameIndex]?.dataURL) return;
+        const img = new Image();
+        img.src = frameData[activeFrameIndex].dataURL;
+        try {
+            ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+        } catch (e) {
+            console.warn('Gagal menggambar frame:', e);
+        }
+    }
+
+    // ================================================================
+    // 6. START GAME
+    // ================================================================
+
+    function startGame() {
+        if (!input) { alert('Input nama tidak tersedia'); return; }
+        if (input.value.trim() === '') { alert('Masukkan nama dahulu'); return; }
+        window.location.href = 'option.html';
+    }
+
+    // ================================================================
+    // 7. TOGGLE VIRTUAL MOUSE
+    // ================================================================
+
+    function toggleVirtualMouse() {
+        isVirtualMouseActive = !isVirtualMouseActive;
+        if (isVirtualMouseActive) {
+            if (handsInstance) {
+                handsInstance.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5 });
+            }
+            if (cursor) cursor.style.display = 'block';
+            console.log('Virtual Mouse: AKTIF');
+        } else {
+            if (handsInstance) {
+                handsInstance.setOptions({ maxNumHands: 0, modelComplexity: 0, minDetectionConfidence: 0,
+                    minTrackingConfidence: 0 });
+            }
+            if (cursor) cursor.style.display = 'none';
+            console.log('Virtual Mouse: NONAKTIF');
+        }
+    }
+
+    // ================================================================
+    // 8. KEYBOARD VIRTUAL (dengan Tailwind)
+    // ================================================================
+
+    const keys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+        'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+        'Z', 'X', 'C', 'V', 'B', 'N', 'M',
+        'SPACE', '⌫'
+    ];
+
+    if (keyboard) {
+        keys.forEach(key => {
+            const btn = document.createElement('button');
+            btn.innerText = key;
+            btn.className =
+                'key-btn h-10 md:h-12 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium transition-colors';
+            btn.onclick = function() {
+                if (!input) return;
+                if (key === 'SPACE') { input.value += ' '; } else if (key === '⌫') { input.value = input.value
+                        .slice(0, -1); } else { input.value += key; }
+                const evt = new Event('input', { bubbles: true });
+                input.dispatchEvent(evt);
+            };
+            keyboard.appendChild(btn);
+        });
+    }
+
+    function toggleKeyboard() {
+        if (!keyboard) return;
+        const isHidden = keyboard.style.display === 'none' || keyboard.style.display === '';
+        keyboard.style.display = isHidden ? 'grid' : 'none';
+    }
+
+    // ================================================================
+    // 9. MEDIAPIPE HANDS
+    // ================================================================
+
+    if (video) {
+        try {
+            handsInstance = new Hands({
+                locateFile: function(file) {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }
+            });
+
+            handsInstance.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            handsInstance.onResults(function(results) {
+                if (!isVirtualMouseActive) {
+                    if (cursor) cursor.style.display = 'none';
+                    return;
+                }
+                if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+
+                const hand = results.multiHandLandmarks[0];
+                const indexFinger = hand[8];
+                const x = (1 - indexFinger.x) * window.innerWidth;
+                const y = indexFinger.y * window.innerHeight;
+
+                if (cursor) {
+                    cursor.style.display = 'block';
+                    cursor.style.left = x + 'px';
+                    cursor.style.top = y + 'px';
+                }
+
+                let fingerCount = 0;
+                if (hand[8].y < hand[6].y) fingerCount++;
+                if (hand[12].y < hand[10].y) fingerCount++;
+                if (hand[16].y < hand[14].y) fingerCount++;
+                if (hand[20].y < hand[18].y) fingerCount++;
+                if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
+
+                if (fingerCount === 2 && !clickCooldown) {
+                    clickCooldown = true;
+                    const element = document.elementFromPoint(x, y);
+                    if (element && element !== cursor) {
+                        element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        console.log('Klik pada:', element.tagName, element.className || '');
+                    }
+                    setTimeout(() => { clickCooldown = false; }, 800);
+                }
+
+                if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
+                    filterCooldown = true;
+                    console.log('Ganti hewan (4 jari)');
+                    window.nextAnimal();
+                    setTimeout(() => { filterCooldown = false; }, 1500);
+                }
+
+                if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
+                    photoCooldown = true;
+                    console.log('Ambil foto (5 jari)');
+                    window.startCountdown();
+                    setTimeout(() => { photoCooldown = false; }, 7000);
+                }
+            });
+
+            camera = new Camera(video, {
+                onFrame: async function() {
+                    if (handsInstance) await handsInstance.send({ image: video });
+                },
+                width: 640,
+                height: 480
+            });
+            camera.start();
+            console.log('Virtual Mouse Aktif');
+
+        } catch (err) {
+            console.error('Gagal inisialisasi MediaPipe:', err);
+        }
+    }
+
+    // ================================================================
+    // 10. PHOTOBOOTH INTEGRATION
+    // ================================================================
+
+    const canvas = document.getElementById('canvas');
+    const gallery = document.getElementById('gallery');
+    const overlay = document.getElementById('animalOverlay');
+    const countdown = document.getElementById('countdown');
+    const animalName = document.getElementById('animalName');
+
+    let countdownRunning = false;
+    let currentAnimal = 0;
+    const animals = [
+        { name: 'Cat', img: './assets/cat.png' },
+        { name: 'Dog', img: './assets/dog.png' },
+        { name: 'Rabbit', img: './assets/rabbit.png' },
+        { name: 'Lion', img: './assets/lion.png' },
+        { name: 'Panda', img: './assets/panda.png' }
+    ];
+
+    const hasPhotobooth = canvas && gallery && overlay && countdown && animalName;
+
+    if (hasPhotobooth) {
+        console.log('Mode Photobooth terdeteksi');
+
+        const photoVideo = document.getElementById('video') || document.getElementById('cam');
+
+        if (photoVideo) {
+            navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
+                .then(stream => { photoVideo.srcObject = stream; })
+                .catch(err => console.error('Kamera photobooth error:', err));
+        }
+
+        function updateAnimal() {
+            if (overlay && animalName && animals[currentAnimal]) {
+                overlay.src = animals[currentAnimal].img;
+                animalName.textContent = animals[currentAnimal].name;
+            }
+        }
+
+        function nextAnimal() {
+            currentAnimal = (currentAnimal + 1) % animals.length;
+            updateAnimal();
+        }
+
+        function prevAnimal() {
+            currentAnimal = (currentAnimal - 1 + animals.length) % animals.length;
+            updateAnimal();
+        }
+
+        function startCountdown() {
+            if (countdownRunning || !countdown || !canvas) return;
+            countdownRunning = true;
+            let count = 5;
+            countdown.style.display = 'block';
+            countdown.textContent = count;
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.textContent = count;
+                } else {
+                    clearInterval(timer);
+                    countdown.style.display = 'none';
+                    takePhoto();
+                    countdownRunning = false;
+                }
+            }, 1000);
+        }
+
+        function takePhoto() {
+            if (!canvas || !video) return;
+            const ctx = canvas.getContext('2d');
+            const w = video.videoWidth || 640;
+            const h = video.videoHeight || 480;
+            canvas.width = w;
+            canvas.height = h;
+
+            ctx.translate(w, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, w, h);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            drawFrameOnCanvas(ctx, w, h);
+
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            if (gallery) gallery.prepend(img);
+
+            document.body.style.filter = 'brightness(2)';
+            setTimeout(() => { document.body.style.filter = 'brightness(1)'; }, 150);
+        }
+
+        window.nextAnimal = nextAnimal;
+        window.prevAnimal = prevAnimal;
+        window.startCountdown = startCountdown;
+        window.drawFrameOnCanvas = drawFrameOnCanvas;
+
+        updateAnimal();
+    } else {
+        console.log('Mode Photobooth tidak aktif');
+    }
+
+    // ================================================================
+    // 11. INISIALISASI FRAME
+    // ================================================================
+
+    initFrameSlots();
+
+    // ================================================================
+    // 12. RESIZE HANDLER
+    // ================================================================
+
+    window.addEventListener('resize', function() {});
+    console.log('Aplikasi siap digunakan — 5 opsi frame tersedia!');
+</script>
+
+</body>
+</html>

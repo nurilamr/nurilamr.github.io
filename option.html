@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pilih Mode - Virtual Mouse AI</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js">
+    </script>
+
+    <style>
+        /* ── animasi masuk ── */
+        .card-enter {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 0.6s ease forwards;
+        }
+        .card-enter:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        .card-enter:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── frame preview pada card ── */
+        .frame-preview {
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: transform 0.4s ease;
+        }
+        .card-game:hover .frame-preview {
+            transform: scale(1.03);
+        }
+
+        /* ── tombol hover ── */
+        .btn-game {
+            transition: all 0.25s ease;
+        }
+        .btn-game:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -8px rgba(37, 99, 235, 0.5);
+        }
+
+        /* ── cursor virtual ── */
+        #cursor {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: red;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 999999;
+            pointer-events: none;
+            display: block;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px red;
+            transition: none;
+        }
+
+        /* ── Video Kamera ── */
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            border-radius: 16px;
+        }
+
+        /* ── Frame overlay di atas video ── */
+        #frameOverlay {
+            position: absolute;
+            inset: 0;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: scaleX(-1);
+            display: none;
+            border-radius: 16px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* ── Container kamera ── */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 4/3;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 2px solid #334155;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ── badge frame aktif ── */
+        .badge-frame {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Indikator gestur ── */
+        #gestureIndicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 99999;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        #gestureIndicator .icon {
+            font-size: 18px;
+        }
+        #gestureIndicator .label {
+            letter-spacing: 0.5px;
+        }
+        #gestureIndicator.show {
+            display: flex;
+        }
+        #gestureIndicator.click {
+            border-color: #3b82f6;
+        }
+        #gestureIndicator.scroll-up {
+            border-color: #22c55e;
+        }
+        #gestureIndicator.scroll-down {
+            border-color: #eab308;
+        }
+
+        /* ── Responsive camera ── */
+        @media (max-width: 640px) {
+            .camera-container {
+                max-width: 100%;
+                aspect-ratio: 4/3;
+            }
+        }
+
+        /* ── range slider untuk sensitivitas ── */
+        .sensitivity-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            outline: none;
+            transition: background 0.2s;
+        }
+        .sensitivity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: 2px solid #60a5fa;
+            transition: 0.2s;
+        }
+        .sensitivity-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .sensitivity-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: 2px solid #60a5fa;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white font-sans antialiased min-h-screen flex items-center justify-center p-4 md:p-6">
+
+    <!-- ─── VIDEO KAMERA (untuk MediaPipe) ─── -->
+    <div class="hidden">
+        <video id="video" autoplay playsinline muted></video>
+    </div>
+
+    <!-- ─── CURSOR ─── -->
+    <div id="cursor"></div>
+
+    <!-- ─── INDICATOR GESTUR ─── -->
+    <div id="gestureIndicator">
+        <span class="icon"><i class="fa-regular fa-hand-peace"></i></span>
+        <span class="label">Gestur terdeteksi</span>
+    </div>
+
+    <!-- ─── KONTEN UTAMA ─── -->
+    <div class="w-full max-w-5xl">
+
+        <!-- ─── HEADER ─── -->
+        <div class="text-center mb-6 md:mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-full text-3xl md:text-4xl shadow-lg mb-3">
+                <i class="fa-solid fa-hand"></i>
+            </div>
+            <h1 class="text-2xl md:text-4xl font-bold tracking-tight">Pilih Mode Permainan</h1>
+            <p class="text-slate-400 text-sm md:text-base mt-1 max-w-md mx-auto">
+                Pilih salah satu mode di bawah ini untuk memulai petualanganmu
+            </p>
+
+            <!-- Info frame + kontrol sensitivitas -->
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-3">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-xs md:text-sm text-slate-300">
+                    <i class="fa-regular fa-image text-blue-400"></i>
+                    <span>Frame terpilih: <span id="frameLabel" class="font-semibold text-white">—</span></span>
+                </div>
+
+                <!-- Kontrol Sensitivitas -->
+                <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700">
+                    <i class="fa-solid fa-expand text-blue-400 text-xs"></i>
+                    <span class="text-xs text-slate-300">Tracking</span>
+                    <input type="range" id="sensitivitySlider" min="0.8" max="2.0" step="0.05" value="1.4"
+                    class="sensitivity-slider w-24 md:w-32" />
+                    <span id="sensitivityLabel" class="text-xs font-semibold text-blue-400 w-8">1.4x</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── CAMERA PREVIEW ─── -->
+        <div class="flex justify-center mb-8">
+            <div class="camera-container">
+                <video id="videoDisplay" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <div id="frameOverlay"></div>
+                <!-- Label frame di atas video -->
+                <div class="absolute top-3 left-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5 z-20">
+                    <i class="fa-regular fa-image text-blue-400 text-[10px]"></i>
+                    <span id="cameraFrameLabel">Frame 1</span>
+                </div>
+                <!-- Info sensitivitas di video -->
+                <div class="absolute bottom-3 right-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5 z-20">
+                    <i class="fa-solid fa-gauge-high text-blue-400 text-[10px]"></i>
+                    <span id="sensitivityDisplay">1.4x</span>
+                </div>
+                <!-- Icon tangan watermark -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-5 opacity-20">
+                    <i class="fa-solid fa-hand-peace text-7xl text-white/30"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── DUA CARD ─── -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+
+            <!-- ─── CARD PUZZLE ─── -->
+            <a href="virtual-puzzle-ai/index.html" class="card-game group relative block rounded-2xl overflow-hidden bg-slate-800/60 border border-slate-700/80 hover:border-blue-500/50 transition-all duration-300 card-enter shadow-xl hover:shadow-blue-500/10">
+                <div class="relative h-40 md:h-48 lg:h-52 overflow-hidden bg-slate-900">
+                    <div id="puzzleFrame" class="frame-preview w-full h-full absolute inset-0"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-600/20 backdrop-blur-sm border border-blue-400/30 flex items-center justify-center text-3xl md:text-4xl text-blue-400 shadow-2xl">
+                            <i class="fa-solid fa-puzzle-piece"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5">
+                        <i class="fa-regular fa-image text-blue-400 text-[10px]"></i>
+                        <span id="puzzleFrameLabel">Frame 1</span>
+                    </div>
+                </div>
+                <div class="p-5 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-1.5">Puzzle</h2>
+                    <p class="text-slate-400 text-sm md:text-base leading-relaxed mb-4">
+                        Asah otak dengan menyusun potongan gambar menjadi utuh. Tantangan seru untuk menguji ketelitianmu!
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500"><i class="fa-regular fa-clock mr-1"></i> 3 level kesulitan</span>
+                        <span class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm md:text-base transition-all btn-game">
+                            <i class="fa-solid fa-play"></i> Mainkan
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- ─── CARD HEWAN ─── -->
+            <a href="hewan.html" class="card-game group relative block rounded-2xl overflow-hidden bg-slate-800/60 border border-slate-700/80 hover:border-emerald-500/50 transition-all duration-300 card-enter shadow-xl hover:shadow-emerald-500/10">
+                <div class="relative h-40 md:h-48 lg:h-52 overflow-hidden bg-slate-900">
+                    <div id="hewanFrame" class="frame-preview w-full h-full absolute inset-0"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-emerald-600/20 backdrop-blur-sm border border-emerald-400/30 flex items-center justify-center text-3xl md:text-4xl text-emerald-400 shadow-2xl">
+                            <i class="fa-solid fa-paw"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5">
+                        <i class="fa-regular fa-image text-emerald-400 text-[10px]"></i>
+                        <span id="hewanFrameLabel">Frame 1</span>
+                    </div>
+                </div>
+                <div class="p-5 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-1.5">Hewan</h2>
+                    <p class="text-slate-400 text-sm md:text-base leading-relaxed mb-4">
+                        Jelajahi dunia fauna interaktif! Kenali berbagai hewan dari seluruh penjuru bumi dengan cara yang menyenangkan.
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500"><i class="fa-regular fa-compass mr-1"></i> 20+ spesies</span>
+                        <span class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm md:text-base transition-all btn-game">
+                            <i class="fa-solid fa-play"></i> Jelajahi
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Tombol kembali -->
+        <div class="mt-10 text-center">
+            <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm md:text-base">
+                <i class="fa-solid fa-arrow-left"></i>
+                Kembali ke halaman utama
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        // 1. BACA DATA FRAME DARI localStorage
+        // ================================================================
+
+        const frameInfo = localStorage.getItem('selectedFrame');
+        let frameDataURL = null;
+        let frameIndex = -1;
+
+        if (frameInfo) {
+            try {
+                const parsed = JSON.parse(frameInfo);
+                frameDataURL = parsed.dataURL || null;
+                frameIndex = parsed.index ?? -1;
+                console.log('✅ Frame dimuat dari localStorage:', frameIndex);
+            } catch (e) {
+                console.warn('Gagal parse frame data:', e);
+            }
+        }
+
+        // Jika tidak ada frame tersimpan, gunakan default
+        if (!frameDataURL) {
+            console.warn('⚠️ Tidak ada frame tersimpan, menggunakan fallback');
+            const canvas = document.createElement('canvas');
+            canvas.width = 400;
+            canvas.height = 400;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createRadialGradient(200, 200, 50, 200, 200, 250);
+            grad.addColorStop(0, '#1e3a5f');
+            grad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 400, 400);
+
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 12;
+            ctx.roundRect(20, 20, 360, 360, 30);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 3;
+            ctx.roundRect(40, 40, 320, 320, 20);
+            ctx.stroke();
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#60a5fa';
+            const corners = [
+                [30, 30, 1, 1],
+                [370, 30, -1, 1],
+                [30, 370, 1, -1],
+                [370, 370, -1, -1]
+            ];
+            for (const [cx, cy, dx, dy] of corners) {
+                ctx.beginPath();
+                ctx.moveTo(cx + dx * 28, cy);
+                ctx.lineTo(cx, cy);
+                ctx.lineTo(cx, cy + dy * 28);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('Default Frame', 200, 380);
+
+            frameDataURL = canvas.toDataURL('image/png');
+            frameIndex = 0;
+        }
+
+        // ================================================================
+        // 2. TAMPILKAN FRAME PADA SEMUA ELEMEN
+        // ================================================================
+
+        const puzzleFrame = document.getElementById('puzzleFrame');
+        const hewanFrame = document.getElementById('hewanFrame');
+        const puzzleLabel = document.getElementById('puzzleFrameLabel');
+        const hewanLabel = document.getElementById('hewanFrameLabel');
+        const frameLabel = document.getElementById('frameLabel');
+        const cameraFrameLabel = document.getElementById('cameraFrameLabel');
+        const frameOverlay = document.getElementById('frameOverlay');
+
+        const labelText = frameIndex >= 0 ? `Frame ${frameIndex + 1}` : 'Default';
+
+        if (frameDataURL) {
+            const style = `background-image: url(${frameDataURL});`;
+            if (puzzleFrame) puzzleFrame.setAttribute('style', style);
+            if (hewanFrame) hewanFrame.setAttribute('style', style);
+            if (frameOverlay) {
+                frameOverlay.style.backgroundImage = `url(${frameDataURL})`;
+                frameOverlay.style.display = 'block';
+            }
+        }
+
+        if (puzzleLabel) puzzleLabel.textContent = labelText;
+        if (hewanLabel) hewanLabel.textContent = labelText;
+        if (frameLabel) frameLabel.textContent = labelText;
+        if (cameraFrameLabel) cameraFrameLabel.textContent = labelText;
+
+        // ================================================================
+        // 3. POLYFILL roundRect
+        // ================================================================
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (typeof r === 'number') r = [r];
+                const radii = r.map(v => Math.min(v, Math.min(w, h) / 2));
+                const tl = radii[0] || 0;
+                const tr = radii[1] || tl;
+                const br = radii[2] || tl;
+                const bl = radii[3] || tl;
+                this.moveTo(x + tl, y);
+                this.arcTo(x + w, y, x + w, y + h, tr);
+                this.arcTo(x + w, y + h, x, y + h, br);
+                this.arcTo(x, y + h, x, y, bl);
+                this.arcTo(x, y, x + w, y, tl);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // ================================================================
+        // 4. VIRTUAL MOUSE - DENGAN SENSITIVITAS YANG BISA DIATUR
+        // ================================================================
+
+        const cursor = document.getElementById('cursor');
+        const videoEl = document.getElementById('video');
+        const videoDisplay = document.getElementById('videoDisplay');
+        const gestureIndicator = document.getElementById('gestureIndicator');
+        const sensitivitySlider = document.getElementById('sensitivitySlider');
+        const sensitivityLabel = document.getElementById('sensitivityLabel');
+        const sensitivityDisplay = document.getElementById('sensitivityDisplay');
+
+        let camera = null;
+        let clickCooldown = false;
+        let filterCooldown = false;
+        let photoCooldown = false;
+        let handsInstance = null;
+        let prevY = null;
+        let scrollAccumulator = 0;
+        const SCROLL_THRESHOLD = 30;
+        let sensitivity = 1.4; // default
+
+        // ── Update sensitivitas dari slider ──
+        function updateSensitivity() {
+            sensitivity = parseFloat(sensitivitySlider.value);
+            sensitivityLabel.textContent = sensitivity.toFixed(1) + 'x';
+            if (sensitivityDisplay) sensitivityDisplay.textContent = sensitivity.toFixed(1) + 'x';
+            console.log('Sensitivitas diubah ke:', sensitivity);
+        }
+
+        sensitivitySlider.addEventListener('input', updateSensitivity);
+
+        // ── Fungsi untuk menampilkan indikator gestur ──
+        function showGesture(type, message) {
+            if (!gestureIndicator) return;
+            gestureIndicator.className = 'show';
+            const icon = gestureIndicator.querySelector('.icon');
+            const label = gestureIndicator.querySelector('.label');
+            if (type === 'click') {
+                gestureIndicator.classList.add('click');
+                icon.innerHTML = '<i class="fa-regular fa-hand-peace"></i>';
+                label.textContent = message || 'Klik!';
+            } else if (type === 'scroll-up') {
+                gestureIndicator.classList.add('scroll-up');
+                icon.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+                label.textContent = message || 'Scroll Atas';
+            } else if (type === 'scroll-down') {
+                gestureIndicator.classList.add('scroll-down');
+                icon.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+                label.textContent = message || 'Scroll Bawah';
+            } else {
+                gestureIndicator.classList.remove('click', 'scroll-up', 'scroll-down');
+                icon.innerHTML = '<i class="fa-regular fa-hand-peace"></i>';
+                label.textContent = message || 'Gestur terdeteksi';
+            }
+            gestureIndicator.style.display = 'flex';
+            clearTimeout(gestureIndicator._hideTimer);
+            gestureIndicator._hideTimer = setTimeout(() => {
+                gestureIndicator.style.display = 'none';
+            }, 1200);
+        }
+
+        // ── Fungsi mapping posisi tangan ke layar dengan sensitivitas ──
+        function mapHandToScreen(handX, handY, screenW, screenH, sens) {
+            // Mapping dengan sensitivitas yang bisa diatur
+            // Semakin tinggi sens, semakin kecil gerakan tangan untuk menjangkau seluruh layar
+
+            // Normalisasi: handX dan handY dari MediaPipe (0-1)
+            // Kita gunakan rumus: pos = (nilai - offset) * skala * sens + centerOffset
+            // Dengan offset untuk mengatasi deadzone di tepi
+
+            const offsetX = 0.05;
+            const offsetY = 0.05;
+            const scaleX = 1 / (1 - 2 * offsetX);
+            const scaleY = 1 / (1 - 2 * offsetY);
+
+            // Mapping X (dibalik karena mirror)
+            let mappedX = (1 - handX - offsetX) * scaleX * sens;
+            mappedX = mappedX - (sens - 1) * 0.5; // center adjustment
+            mappedX = Math.max(0, Math.min(1, mappedX));
+
+            // Mapping Y (langsung)
+            let mappedY = (handY - offsetY) * scaleY * sens;
+            mappedY = mappedY - (sens - 1) * 0.5; // center adjustment
+            mappedY = Math.max(0, Math.min(1, mappedY));
+
+            return {
+                x: mappedX * screenW,
+                y: mappedY * screenH
+            };
+        }
+
+        // ── Inisialisasi MediaPipe Hands ──
+        function initHands() {
+            if (!videoEl) {
+                console.error('Video element tidak ditemukan!');
+                return;
+            }
+
+            try {
+                handsInstance = new Hands({
+                    locateFile: function(file) {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                    }
+                });
+
+                handsInstance.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                handsInstance.onResults(function(results) {
+                    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+                        if (gestureIndicator) gestureIndicator.style.display = 'none';
+                        return;
+                    }
+
+                    const hand = results.multiHandLandmarks[0];
+                    const indexFinger = hand[8];
+
+                    // ── Gunakan mapping dengan sensitivitas ──
+                    const pos = mapHandToScreen(
+                        indexFinger.x,
+                        indexFinger.y,
+                        window.innerWidth,
+                        window.innerHeight,
+                        sensitivity
+                    );
+
+                    if (cursor) {
+                        cursor.style.display = 'block';
+                        cursor.style.left = pos.x + 'px';
+                        cursor.style.top = pos.y + 'px';
+                    }
+
+                    // ── Hitung jari terangkat ──
+                    let fingerCount = 0;
+                    if (hand[8].y < hand[6].y) fingerCount++;
+                    if (hand[12].y < hand[10].y) fingerCount++;
+                    if (hand[16].y < hand[14].y) fingerCount++;
+                    if (hand[20].y < hand[18].y) fingerCount++;
+                    if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
+
+                    // ── DETEKSI 2 JARI ──
+                    const indexTip = hand[8];
+                    const middleTip = hand[12];
+                    const distance = Math.hypot(indexTip.x - middleTip.x, indexTip.y - middleTip.y);
+
+                    const isTwoFingers = (fingerCount === 2 &&
+                        hand[8].y < hand[6].y &&
+                        hand[12].y < hand[10].y &&
+                        hand[16].y > hand[14].y &&
+                        hand[20].y > hand[18].y);
+
+                    if (isTwoFingers) {
+                        const isClose = distance < 0.05;
+                        const isFar = distance > 0.08;
+
+                        if (isClose) {
+                            // KLIK
+                            if (!clickCooldown) {
+                                clickCooldown = true;
+                                const element = document.elementFromPoint(pos.x, pos.y);
+                                if (element && element !== cursor) {
+                                    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                                    showGesture('click', 'Klik!');
+                                } else {
+                                    showGesture('click', 'Klik');
+                                }
+                                setTimeout(() => { clickCooldown = false; }, 800);
+                            }
+                        } else if (isFar) {
+                            // SCROLL
+                            const currentY = indexTip.y;
+                            if (prevY !== null) {
+                                const deltaY = currentY - prevY;
+                                scrollAccumulator += deltaY * window.innerHeight * sensitivity;
+                                if (Math.abs(scrollAccumulator) > SCROLL_THRESHOLD) {
+                                    const direction = scrollAccumulator > 0 ? 'down' : 'up';
+                                    const scrollAmount = Math.abs(scrollAccumulator);
+                                    if (direction === 'down') {
+                                        window.scrollBy(0, scrollAmount);
+                                        showGesture('scroll-down', 'Scroll Bawah');
+                                    } else {
+                                        window.scrollBy(0, -scrollAmount);
+                                        showGesture('scroll-up', 'Scroll Atas');
+                                    }
+                                    scrollAccumulator = 0;
+                                }
+                            }
+                            prevY = currentY;
+                        } else {
+                            prevY = null;
+                            scrollAccumulator = 0;
+                            if (gestureIndicator) gestureIndicator.style.display = 'none';
+                        }
+                    } else {
+                        prevY = null;
+                        scrollAccumulator = 0;
+                        if (gestureIndicator) gestureIndicator.style.display = 'none';
+                    }
+
+                    // 4 jari = ganti hewan
+                    if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
+                        filterCooldown = true;
+                        window.nextAnimal();
+                        showGesture('click', 'Ganti Hewan');
+                        setTimeout(() => { filterCooldown = false; }, 1500);
+                    }
+
+                    // 5 jari = foto
+                    if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
+                        photoCooldown = true;
+                        window.startCountdown();
+                        showGesture('click', 'Foto!');
+                        setTimeout(() => { photoCooldown = false; }, 7000);
+                    }
+                });
+
+                // ── Start Camera ──
+                camera = new Camera(videoEl, {
+                    onFrame: async function() {
+                        if (handsInstance) {
+                            await handsInstance.send({ image: videoEl });
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+
+                // Tampilkan video di videoDisplay
+                navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+                    .then(stream => {
+                        if (videoDisplay) {
+                            videoDisplay.srcObject = stream;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Gagal akses kamera untuk display:', err);
+                        if (videoEl && videoDisplay) {
+                            videoDisplay.srcObject = videoEl.srcObject;
+                        }
+                    });
+
+                console.log('Virtual Mouse aktif dengan sensitivitas:', sensitivity);
+
+            } catch (err) {
+                console.error('Gagal inisialisasi MediaPipe:', err);
+            }
+        }
+
+        // ── Inisialisasi saat halaman dimuat ──
+        document.addEventListener('DOMContentLoaded', function() {
+            initHands();
+            if (cursor) cursor.style.display = 'block';
+            updateSensitivity();
+        });
+
+        // ── Resize handler ──
+        window.addEventListener('resize', function() {});
+
+        console.log('📦 Option page — tracking range diperluas dengan kontrol sensitivitas.');
+    </script>
+
+</body>
+</html>
