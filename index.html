@@ -64,7 +64,6 @@
             display: none;
         }
 
-        /* kecilin sedikit di mobile */
         @media (max-width: 480px) {
             .frame-slot {
                 width: 52px !important;
@@ -80,6 +79,71 @@
                 height: 18px !important;
                 font-size: 8px !important;
             }
+        }
+
+        /* Scroll indicator */
+        #scrollIndicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999998;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #scrollIndicator.show {
+            opacity: 1;
+        }
+        #scrollIndicator i {
+            font-size: 16px;
+        }
+        #scrollIndicator .arrow-up {
+            color: #4ade80;
+        }
+        #scrollIndicator .arrow-down {
+            color: #f87171;
+        }
+
+        /* Gesture hint overlay */
+        #gestureHint {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999997;
+            background: rgba(0, 0, 0, 0.6);
+            color: #e2e8f0;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.3px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #gestureHint.show {
+            opacity: 1;
+        }
+        #gestureHint .highlight {
+            color: #60a5fa;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -106,19 +170,15 @@
                     class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
                     ⌨️ Keyboard
                 </button>
-                <button onclick="toggleVirtualMouse()"
+                <button onclick="startGame()"
                 class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
-                🖱️ Virtual Mouse
+                🚀 Mulai
             </button>
-            <button onclick="startGame()"
-            class="w-full h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-transform hover:scale-[1.02] text-base md:text-lg">
-            🚀 Mulai
-        </button>
-    </div>
+        </div>
 
-    <!-- Virtual Keyboard -->
-    <div id="keyboard" class="grid grid-cols-10 gap-2 mt-5" style="display:none"></div>
-</div>
+        <!-- Virtual Keyboard -->
+        <div id="keyboard" class="grid grid-cols-10 gap-2 mt-5" style="display:none"></div>
+    </div>
 </div>
 
 <!-- ─── CAMERA BOX (kanan) ─── -->
@@ -145,6 +205,18 @@
 <!-- ─── CURSOR ─── -->
 <div id="cursor"></div>
 
+<!-- ─── SCROLL INDICATOR ─── -->
+<div id="scrollIndicator">
+    <i class="fa-solid fa-arrow-up arrow-up"></i>
+    <span id="scrollText">Gulir</span>
+    <i class="fa-solid fa-arrow-down arrow-down"></i>
+</div>
+
+<!-- ─── GESTURE HINT ─── -->
+<div id="gestureHint">
+    ✋ <span class="highlight">cubit</span> = klik &nbsp;·&nbsp; ✌️ <span class="highlight">2 jari rapat</span> = gulir &nbsp;·&nbsp; 🖐️ 4–5 jari = fitur
+</div>
+
 <script>
     // ================================================================
     // 1. DEKLARASI GLOBAL
@@ -156,17 +228,22 @@
     const keyboard = document.getElementById('keyboard');
     const frameOverlay = document.getElementById('frameOverlay');
     const frameSlots = document.getElementById('frameSlots');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    const scrollText = document.getElementById('scrollText');
+    const gestureHint = document.getElementById('gestureHint');
 
     let camera = null;
     let clickCooldown = false;
     let filterCooldown = false;
     let photoCooldown = false;
-    let isVirtualMouseActive = true;
     let handsInstance = null;
+    let scrollPrevY = null;
+    let scrollActive = false;
+    let hintTimeout = null;
 
     const frameData = [];
     let activeFrameIndex = -1;
-    let isRestoring = false; // supaya tidak trigger save berulang saat restore
+    let isRestoring = false;
 
     // ================================================================
     // 2. STORAGE KEY
@@ -298,7 +375,6 @@
                     for (let i = 0; i < Math.min(dataURLs.length, frameData.length); i++) {
                         if (dataURLs[i] && dataURLs[i].startsWith('data:image')) {
                             frameData[i].dataURL = dataURLs[i];
-                            // update slot image
                             const slots = document.querySelectorAll('.frame-slot');
                             if (slots[i]) {
                                 const img = slots[i].querySelector('img');
@@ -317,7 +393,6 @@
                     idx = parsed;
                 }
             }
-            // pilih frame (tapi jangan trigger save lagi)
             selectFrameInternal(idx, true);
         } catch (e) {
             console.warn('Gagal memuat frame dari localStorage:', e);
@@ -378,20 +453,17 @@
             fileInput.dataset.index = i;
             slot.appendChild(fileInput);
 
-            // KLIK SLOT → pilih frame
             slot.addEventListener('click', function(e) {
                 if (e.target.closest('.frame-upload-btn')) return;
                 const idx = parseInt(this.dataset.index);
                 selectFrame(idx);
             });
 
-            // UPLOAD BTN
             uploadBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 fileInput.click();
             });
 
-            // FILE INPUT CHANGE → upload gambar
             fileInput.addEventListener('change', function(e) {
                 const idx = parseInt(this.dataset.index);
                 const file = this.files[0];
@@ -406,7 +478,6 @@
                     if (activeFrameIndex === idx) {
                         applyFrameOverlay(data);
                     }
-                    // simpan ke localStorage
                     saveFrameData();
                     fileInput.value = '';
                 };
@@ -416,10 +487,8 @@
             frameSlots.appendChild(slot);
         }
 
-        // Setelah semua slot dibuat, muat dari localStorage
         loadFrameData();
 
-        // fallback: jika loadFrameData gagal memilih, pilih 0
         if (activeFrameIndex < 0) {
             selectFrameInternal(0, true);
         }
@@ -492,30 +561,7 @@
     }
 
     // ================================================================
-    // 9. TOGGLE VIRTUAL MOUSE
-    // ================================================================
-
-    function toggleVirtualMouse() {
-        isVirtualMouseActive = !isVirtualMouseActive;
-        if (isVirtualMouseActive) {
-            if (handsInstance) {
-                handsInstance.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5 });
-            }
-            if (cursor) cursor.style.display = 'block';
-            console.log('Virtual Mouse: AKTIF');
-        } else {
-            if (handsInstance) {
-                handsInstance.setOptions({ maxNumHands: 0, modelComplexity: 0, minDetectionConfidence: 0,
-                    minTrackingConfidence: 0 });
-            }
-            if (cursor) cursor.style.display = 'none';
-            console.log('Virtual Mouse: NONAKTIF');
-        }
-    }
-
-    // ================================================================
-    // 10. KEYBOARD VIRTUAL
+    // 9. KEYBOARD VIRTUAL
     // ================================================================
 
     const keys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
@@ -548,7 +594,51 @@
     }
 
     // ================================================================
-    // 11. MEDIAPIPE HANDS
+    // 10. SHOW HINT (sementara)
+    // ================================================================
+
+    function showHint(text, duration = 1200) {
+        if (!gestureHint) return;
+        gestureHint.textContent = text;
+        gestureHint.classList.add('show');
+        clearTimeout(hintTimeout);
+        hintTimeout = setTimeout(() => {
+            gestureHint.classList.remove('show');
+        }, duration);
+    }
+
+    // ================================================================
+    // 11. SCROLL INDICATOR
+    // ================================================================
+
+    let scrollIndicatorTimeout = null;
+
+    function showScrollIndicator(direction) {
+        if (!scrollIndicator) return;
+        const arrowUp = scrollIndicator.querySelector('.arrow-up');
+        const arrowDown = scrollIndicator.querySelector('.arrow-down');
+        if (direction === 'up') {
+            arrowUp.style.opacity = '1';
+            arrowDown.style.opacity = '0.3';
+            scrollText.textContent = 'Gulir ke Atas';
+        } else if (direction === 'down') {
+            arrowUp.style.opacity = '0.3';
+            arrowDown.style.opacity = '1';
+            scrollText.textContent = 'Gulir ke Bawah';
+        } else {
+            arrowUp.style.opacity = '0.5';
+            arrowDown.style.opacity = '0.5';
+            scrollText.textContent = 'Gulir';
+        }
+        scrollIndicator.classList.add('show');
+        clearTimeout(scrollIndicatorTimeout);
+        scrollIndicatorTimeout = setTimeout(() => {
+            scrollIndicator.classList.remove('show');
+        }, 800);
+    }
+
+    // ================================================================
+    // 12. MEDIAPIPE HANDS — Virtual Mouse + Gestur Baru
     // ================================================================
 
     if (video) {
@@ -567,23 +657,26 @@
             });
 
             handsInstance.onResults(function(results) {
-                if (!isVirtualMouseActive) {
+                if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
                     if (cursor) cursor.style.display = 'none';
+                    scrollActive = false;
+                    scrollPrevY = null;
                     return;
                 }
-                if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
 
                 const hand = results.multiHandLandmarks[0];
                 const indexFinger = hand[8];
                 const x = (1 - indexFinger.x) * window.innerWidth;
                 const y = indexFinger.y * window.innerHeight;
 
+                // ── Cursor ──
                 if (cursor) {
                     cursor.style.display = 'block';
                     cursor.style.left = x + 'px';
                     cursor.style.top = y + 'px';
                 }
 
+                // ── Hitung jari terentang (untuk 4 & 5 jari) ──
                 let fingerCount = 0;
                 if (hand[8].y < hand[6].y) fingerCount++;
                 if (hand[12].y < hand[10].y) fingerCount++;
@@ -591,26 +684,87 @@
                 if (hand[20].y < hand[18].y) fingerCount++;
                 if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
 
-                if (fingerCount === 2 && !clickCooldown) {
+                // ── Landmark penting ──
+                const thumbTip = hand[4];
+                const indexTip = hand[8];
+                const middleTip = hand[12];
+
+                // ── PINCH: jarak ibu jari + telunjuk ──
+                const pinchDist = Math.hypot(
+                    thumbTip.x - indexTip.x,
+                    thumbTip.y - indexTip.y,
+                    thumbTip.z - indexTip.z
+                );
+                const isPinch = pinchDist < 0.045;
+
+                // ── 2 JARI RAPAT: telunjuk + jari tengah ──
+                const twoFingerDist = Math.hypot(
+                    indexTip.x - middleTip.x,
+                    indexTip.y - middleTip.y,
+                    indexTip.z - middleTip.z
+                );
+                const isTwoTogether = twoFingerDist < 0.045;
+
+                // ── GESTURE: KLIK (cubit / pinch) ──
+                if (isPinch && !clickCooldown) {
                     clickCooldown = true;
                     const element = document.elementFromPoint(x, y);
                     if (element && element !== cursor) {
                         element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                        console.log('Klik pada:', element.tagName, element.className || '');
+                        console.log('🖱️ Klik (cubit) pada:', element.tagName, element.className || '');
+                        // Feedback visual singkat
+                        cursor.style.background = '#4ade80';
+                        cursor.style.boxShadow = '0 0 30px #4ade80';
+                        setTimeout(() => {
+                            cursor.style.background = 'red';
+                            cursor.style.boxShadow = '0 0 20px red';
+                        }, 200);
+                        showHint('✅ Klik!', 600);
                     }
-                    setTimeout(() => { clickCooldown = false; }, 800);
+                    setTimeout(() => { clickCooldown = false; }, 500);
                 }
 
+                // ── GESTURE: SCROLL (2 jari rapat, bukan pinch) ──
+                if (isTwoTogether && !isPinch) {
+                    const avgY = (indexTip.y + middleTip.y) / 2;
+                    if (scrollPrevY !== null) {
+                        const deltaY = avgY - scrollPrevY;
+                        const threshold = 0.004;
+                        if (Math.abs(deltaY) > threshold) {
+                            const scrollAmount = deltaY * -450;
+                            window.scrollBy(0, scrollAmount);
+                            // Indikator arah
+                            if (deltaY < 0) {
+                                showScrollIndicator('up');
+                            } else {
+                                showScrollIndicator('down');
+                            }
+                            if (!scrollActive) {
+                                scrollActive = true;
+                                showHint('✌️ Gulir aktif', 800);
+                            }
+                        }
+                    }
+                    scrollPrevY = avgY;
+                } else {
+                    scrollActive = false;
+                    scrollPrevY = null;
+                }
+
+                // ── GESTURE: 4 JARI → nextAnimal ──
                 if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
                     filterCooldown = true;
-                    console.log('Ganti hewan (4 jari)');
+                    console.log('🐾 Ganti hewan (4 jari)');
+                    showHint('🐾 Ganti hewan', 600);
                     window.nextAnimal();
                     setTimeout(() => { filterCooldown = false; }, 1500);
                 }
 
+                // ── GESTURE: 5 JARI → foto ──
                 if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
                     photoCooldown = true;
-                    console.log('Ambil foto (5 jari)');
+                    console.log('📸 Ambil foto (5 jari)');
+                    showHint('📸 Foto!', 600);
                     window.startCountdown();
                     setTimeout(() => { photoCooldown = false; }, 7000);
                 }
@@ -624,7 +778,12 @@
                 height: 480
             });
             camera.start();
-            console.log('Virtual Mouse Aktif');
+            console.log('✅ Virtual Mouse aktif — Gestur: cubit=klik, 2 jari rapat=gulir');
+
+            // Tampilkan hint awal
+            setTimeout(() => {
+                showHint('✋ cubit = klik  ·  ✌️ 2 jari rapat = gulir', 2500);
+            }, 1500);
 
         } catch (err) {
             console.error('Gagal inisialisasi MediaPipe:', err);
@@ -632,7 +791,7 @@
     }
 
     // ================================================================
-    // 12. PHOTOBOOTH INTEGRATION
+    // 13. PHOTOBOOTH INTEGRATION
     // ================================================================
 
     const canvas = document.getElementById('canvas');
@@ -734,17 +893,24 @@
     }
 
     // ================================================================
-    // 13. INISIALISASI
+    // 14. INISIALISASI
     // ================================================================
 
     initFrameSlots();
 
     // ================================================================
-    // 14. RESIZE HANDLER
+    // 15. RESIZE HANDLER
     // ================================================================
 
     window.addEventListener('resize', function() {});
-    console.log('✅ Aplikasi siap — frame otomatis tersimpan di localStorage!');
+
+    console.log('✅ Aplikasi siap — Virtual Mouse selalu aktif!');
+    console.log('✅ Frame otomatis tersimpan di localStorage.');
+    console.log('📌 Gestur:');
+    console.log('   ✋ cubit (ibu jari + telunjuk) = klik');
+    console.log('   ✌️ 2 jari rapat (telunjuk + tengah) = gulir');
+    console.log('   🖐️ 4 jari = ganti hewan');
+    console.log('   🖐️ 5 jari = foto');
 </script>
 
 </body>

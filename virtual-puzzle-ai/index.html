@@ -3,66 +3,53 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AI Virtual Mouse Puzzle</title>
+    <title>AI Virtual Mouse Puzzle</title>
 
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/puzzle.css">
-<link rel="stylesheet" href="css/kursor.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/puzzle.css">
+    <link rel="stylesheet" href="css/kursor.css">
 
 </head>
 
 <body>
 
-<!-- BACKGROUND VIDEO -->
-<video autoplay muted loop id="bgVideo">
-<source src="assets/video/video hewan.mp4" type="video/mp4">
-</video>
+    <!-- BACKGROUND VIDEO -->
+    <video autoplay muted loop id="bgVideo">
+        <source src="assets/video/video hewan.mp4" type="video/mp4">
+    </video>
 
 
-<!-- TITLE -->
-<h1>Virtual Mouse Puzzle</h1>
+    <!-- TITLE -->
+    <h1>Virtual Mouse Puzzle</h1>
 
 
-<!-- PLAYER NAME -->
-<div class="player-box">
-<input type="text" id="playerName" placeholder="Enter your name">
-</div>
+    <!-- CONTROL BUTTON -->
+    <div class="controls">
 
-
-<!-- CONTROL BUTTON -->
-<div class="controls">
-
-<button onclick="startPuzzle()">Start Puzzle</button>
-
-<button onclick="toggleCamera()" id="cameraBtn">
-    Start Camera
-    </button>
-
-<button onclick="startAll()">Play With Hand</button>
-<a href="../option.html"
-   onclick="startAll()"
-   style="
-      padding: 12px 22px;
-      margin: 10px;
-      border: none;
-      border-radius: 10px;
-      background: #2563eb;
-      color: white;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.25s;
-      display: inline-block;
-      text-decoration: none;
-   "
-   onmouseover="this.style.transform='scale(1.05)'; this.style.background='#1d4ed8';"
-   onmouseout="this.style.transform='scale(1)'; this.style.background='#2563eb';"
->
-   Kembali
+    
+        <a href="../option.html"
+        onclick="startAll()"
+        style="
+        padding: 12px 22px;
+        margin: 10px;
+        border: none;
+        border-radius: 10px;
+        background: #2563eb;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+        transition: 0.25s;
+        display: inline-block;
+        text-decoration: none;
+        "
+        onmouseover="this.style.transform='scale(1.05)'; this.style.background='#1d4ed8';"
+        onmouseout="this.style.transform='scale(1)'; this.style.background='#2563eb';"
+    >
+    Kembali
 </a>
-
 
 </div>
 
@@ -72,49 +59,38 @@
 <div class="game-container">
 
 
-<!-- LEFT PANEL : LEADERBOARD -->
-<div class="leaderboard panel">
+    <!-- LEFT PANEL : LEVEL -->
+<div class="left-panel">
 
-<h2>🏆 Leaderboard</h2>
-
-<ul id="leaderboardList"></ul>
-
-<button onclick="resetLeaderboard()" class="reset-btn">
-Reset Leaderboard
-</button>
+    <div class="info-card">
+        <span>Level</span>
+        <h3 id="level">1</h3>
+    </div>
 
 </div>
 
 
 
-<!-- CENTER : PUZZLE -->
-<div class="center-area">
+    <!-- CENTER : PUZZLE -->
+    <div class="center-area">
 
-<div id="puzzleBoard"></div>
+        <div id="puzzleBoard"></div>
 
-<div id="virtualCursor"></div>
+        <div id="virtualCursor"></div>
 
-</div>
+    </div>
 
 
 
-<!-- RIGHT PANEL : INFO -->
-<div class="right-panel">
+    <!-- RIGHT PANEL : INFO (tanpa timer) -->
+    <div class="right-panel">
 
-<div class="info-card">
-<span>Level</span>
-<h3 id="level">1</h3>
-</div>
+    
 
-<div class="info-card">
-<span>Time</span>
-<h3 id="timer">0:00.00</h3>
-</div>
+        <!-- CAMERA -->
+        <video id="camera" autoplay playsinline></video>
 
-<!-- CAMERA -->
-<video id="camera" autoplay playsinline></video>
-
-</div>
+    </div>
 
 
 </div>
@@ -124,11 +100,11 @@ Reset Leaderboard
 <!-- WIN POPUP -->
 <div id="winPopup" class="win-popup">
 
-<h2>🎉 Puzzle Completed!</h2>
+    <h2>🎉 Puzzle Completed!</h2>
 
-<p id="winScore"></p>
+    <p id="winScore"></p>
 
-<button onclick="closeWin()">OK</button>
+    <button onclick="closeWin()">OK</button>
 
 </div>
 
@@ -148,541 +124,256 @@ Reset Leaderboard
 
 <script>
     console.log("AI Puzzle App Loaded");
-function confettiAnimation(){
 
-    for(let i=0;i<80;i++){
-    
-    let conf=document.createElement("div")
-    
-    conf.style.position="fixed"
-    conf.style.width="10px"
-    conf.style.height="10px"
-    conf.style.background="hsl("+Math.random()*360+"deg,80%,60%)"
-    
-    conf.style.left=Math.random()*window.innerWidth+"px"
-    conf.style.top="-20px"
-    
-    conf.style.zIndex=9999
-    
-    document.body.appendChild(conf)
-    
-    let fall=setInterval(()=>{
-    
-    conf.style.top=parseInt(conf.style.top)+5+"px"
-    
-    if(parseInt(conf.style.top)>window.innerHeight){
-    
-    conf.remove()
-    clearInterval(fall)
-    
+    function confettiAnimation() {
+        for (let i = 0; i < 80; i++) {
+            let conf = document.createElement("div")
+            conf.style.position = "fixed"
+            conf.style.width = "10px"
+            conf.style.height = "10px"
+            conf.style.background = "hsl(" + Math.random() * 360 + "deg,80%,60%)"
+            conf.style.left = Math.random() * window.innerWidth + "px"
+            conf.style.top = "-20px"
+            conf.style.zIndex = 9999
+            document.body.appendChild(conf)
+            let fall = setInterval(() => {
+                conf.style.top = parseInt(conf.style.top) + 5 + "px"
+                if (parseInt(conf.style.top) > window.innerHeight) {
+                    conf.remove()
+                    clearInterval(fall)
+                }
+            }, 20)
+        }
     }
-    
-    },20)
-    
+
+    const video = document.getElementById("camera");
+    const cursor = document.getElementById("virtualCursor");
+    let camera
+    let cameraRunning = false
+    let clicking = false;
+
+    // smoothing cursor
+    let smoothX = 0;
+    let smoothY = 0;
+    const smoothFactor = 0.3;
+
+    function startHandMouse() {
+        cursor.style.display = "block";
+        const hands = new Hands({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
+        });
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+        hands.onResults((results) => {
+            if (results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const indexFinger = landmarks[8];
+                const middleFinger = landmarks[12];
+                let x = (1 - indexFinger.x) * window.innerWidth;
+                let y = indexFinger.y * window.innerHeight;
+                cursor.style.left = x + "px";
+                cursor.style.top = y + "px";
+                let dx = indexFinger.x - middleFinger.x;
+                let dy = indexFinger.y - middleFinger.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 0.05) {
+                    if (!clicking) {
+                        clicking = true;
+                        const element = document.elementFromPoint(x, y);
+                        if (element) {
+                            element.click();
+                        }
+                    }
+                } else {
+                    clicking = false;
+                }
+            }
+        });
+        camera = new Camera(video, {
+            onFrame: async () => {
+                await hands.send({ image: video });
+            },
+            width: 640,
+            height: 480
+        });
+        camera.start();
     }
-    
+
+    function toggleCamera() {
+        const btn = document.getElementById("cameraBtn")
+        if (!cameraRunning) {
+            startHandMouse()
+            cameraRunning = true
+            btn.innerText = "Stop Camera"
+        } else {
+            stopCamera()
+            cameraRunning = false
+            btn.innerText = "Start Camera"
+        }
     }
-    // app.js
 
-// Fungsi global untuk reset leaderboard
-window.resetLeaderboard = function() {
-    // Hapus dari localStorage
-    localStorage.removeItem('leaderboard');
-    
-    // Update tampilan
-    const leaderboardList = document.getElementById('leaderboardList');
-    if (leaderboardList) {
-        leaderboardList.innerHTML = '<li style="list-style: none; text-align: center; padding: 10px; color: #888;">No data available</li>';
+    function stopCamera() {
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => {
+                track.stop()
+            })
+            video.srcObject = null
+        }
+        cursor.style.display = "none"
     }
-    
-    // Update high score jika perlu
-    const highscoreElement = document.getElementById('highscore');
-    if (highscoreElement) {
-        highscoreElement.textContent = '0';
+
+    // fungsi klik virtual
+    function simulateClick(x, y) {
+        const element = document.elementFromPoint(x, y);
+        if (!element) return;
+        if (element.classList.contains("tile")) {
+            element.click();
+        }
     }
-    
-    console.log('Leaderboard cleared');
-}
 
-// Panggil fungsi saat tombol diklik
-document.addEventListener('DOMContentLoaded', function() {
-    const resetBtn = document.getElementById('resetLeaderboardBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', window.resetLeaderboard);
+    let level = 1
+    let grid = 3
+    const board = document.getElementById("puzzleBoard")
+    let firstTile = null
+
+    // LEVEL CONFIG
+    const levels = [
+        { grid: 3, image: "assets/images/harimau.jpg" },
+        { grid: 3, image: "assets/images/burung.jpg" },
+        { grid: 3, image: "assets/images/kuda.jpg" },
+        { grid: 3, image: "assets/images/jerapah.jpg" },
+        { grid: 3, image: "assets/images/bebek.jpg" }
+    ]
+
+    function startPuzzle() {
+        const config = levels[level - 1]
+        grid = config.grid
+        document.getElementById("level").innerText = level
+        createPuzzle(grid, config.image)
     }
-});
 
-const video = document.getElementById("camera");
-const cursor = document.getElementById("virtualCursor");
-let camera
-let cameraRunning = false
-let clicking = false;
-
-// smoothing cursor
-let smoothX = 0;
-let smoothY = 0;
-const smoothFactor = 0.3;
-
-function startHandMouse(){
-
-cursor.style.display="block";
-
-const hands = new Hands({
-locateFile: (file) => {
-return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-}
-});
-
-hands.setOptions({
-maxNumHands:1,
-modelComplexity:1,
-minDetectionConfidence:0.7,
-minTrackingConfidence:0.7
-});
-
-hands.onResults((results)=>{
-
-if(results.multiHandLandmarks.length > 0){
-
-const landmarks = results.multiHandLandmarks[0];
-
-const indexFinger = landmarks[8];
-const middleFinger = landmarks[12];
-
-let x = (1 - indexFinger.x) * window.innerWidth;
-let y = indexFinger.y * window.innerHeight;
-
-cursor.style.left = x + "px";
-cursor.style.top = y + "px";
-
-let dx = indexFinger.x - middleFinger.x;
-let dy = indexFinger.y - middleFinger.y;
-let distance = Math.sqrt(dx*dx + dy*dy);
-
-if(distance < 0.05){
-
-if(!clicking){
-
-clicking = true;
-
-const element = document.elementFromPoint(x,y);
-
-if(element){
-element.click();
-}
-
-}
-
-}else{
-
-clicking = false;
-
-}
-
-}
-
-});
-
-camera = new Camera(video,{
-onFrame: async ()=>{
-await hands.send({image: video});
-},
-width:640,
-height:480
-});
-
-camera.start();
-
-}
-
-function toggleCamera(){
-
-const btn = document.getElementById("cameraBtn")
-
-if(!cameraRunning){
-
-startHandMouse()
-
-cameraRunning = true
-
-btn.innerText = "Stop Camera"
-
-}else{
-
-stopCamera()
-
-cameraRunning = false
-
-btn.innerText = "Start Camera"
-
-}
-
-}
-
-function stopCamera(){
-
-if(video.srcObject){
-
-video.srcObject.getTracks().forEach(track=>{
-track.stop()
-})
-
-video.srcObject = null
-
-}
-
-cursor.style.display="none"
-
-}
-
-
-
-// fungsi klik virtual
-function simulateClick(x,y){
-
-const element = document.elementFromPoint(x,y);
-
-if(!element) return;
-
-// hanya klik puzzle tile
-if(element.classList.contains("tile")){
-
-element.click();
-
-}
-
-}
-
-let time = 0
-let startTime
-let timerInterval
-
-let level = 1
-let grid = 3
-
-const board = document.getElementById("puzzleBoard")
-
-let firstTile = null
-
-// leaderboard
-let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || []
-
-
-// LEVEL CONFIG
-const levels = [
-
-{grid:3,image:"assets/images/harimau.jpg"},
-{grid:3,image:"assets/images/burung.jpg"},
-{grid:3,image:"assets/images/kuda.jpg"},
-{grid:3,image:"assets/images/jerapah.jpg"},
-{grid:3,image:"assets/images/bebek.jpg"}
-
-]
-
-
-
-function startPuzzle(){
-
-// TIMER HANYA START DI LEVEL 1
-if(level === 1){
-
-time = 0
-
-clearInterval(timerInterval)
-
-startTime = Date.now()
-
-timerInterval = setInterval(()=>{
-
-time = (Date.now() - startTime) / 1000
-
-document.getElementById("timer").innerText = formatTime(time)
-
-},10)
-
-}
-
-const config = levels[level-1]
-
-grid = config.grid
-
-document.getElementById("level").innerText = level
-
-createPuzzle(grid,config.image)
-
-}
-
-
-
-function createPuzzle(grid,image){
-
-board.innerHTML=""
-
-board.style.gridTemplateColumns=`repeat(${grid},1fr)`
-board.style.gridTemplateRows=`repeat(${grid},1fr)`
-
-let positions=[]
-
-for(let i=0;i<grid*grid;i++){
-positions.push(i)
-}
-
-positions.sort(()=>Math.random()-0.5)
-
-let size = 450/grid
-
-positions.forEach(i=>{
-
-let tile=document.createElement("div")
-tile.className="tile"
-
-let x=i%grid
-let y=Math.floor(i/grid)
-
-tile.style.backgroundImage=`url(${image})`
-tile.style.backgroundSize="450px 450px"
-tile.style.backgroundPosition=`-${x*size}px -${y*size}px`
-
-tile.dataset.correct=i
-
-tile.addEventListener("click",()=>swapTile(tile))
-
-board.appendChild(tile)
-
-})
-
-}
-
-
-
-function swapTile(tile){
-
-if(!firstTile){
-
-firstTile = tile
-tile.style.border="3px solid red"
-
-}else{
-
-let tempBg = firstTile.style.backgroundPosition
-let tempCorrect = firstTile.dataset.correct
-
-firstTile.style.backgroundPosition = tile.style.backgroundPosition
-firstTile.dataset.correct = tile.dataset.correct
-
-tile.style.backgroundPosition = tempBg
-tile.dataset.correct = tempCorrect
-
-firstTile.style.border="none"
-firstTile = null
-
-document.getElementById("moveSound").play()
-
-checkWin()
-
-}
-
-}
-
-
-
-function checkWin(){
-
-let tiles=document.querySelectorAll(".tile")
-
-let win=true
-
-tiles.forEach((tile,index)=>{
-
-if(tile.dataset.correct != index){
-win=false
-}
-
-})
-
-if(win){
-
-document.getElementById("winSound").play()
-
-// JIKA BELUM LEVEL TERAKHIR
-if(level < levels.length){
-
-level++
-
-setTimeout(()=>{
-
-startPuzzle()
-
-},500)
-
-}
-
-// JIKA SUDAH LEVEL TERAKHIR
-else{
-
-clearInterval(timerInterval)
-
-let username = document.getElementById("playerName").value
-
-if(username.trim() === ""){
-username = "Player"
-}
-
-saveLeaderboard(username, time)
-
-setTimeout(()=>{
-
-alert("🏆 Semua level selesai!\nTotal Time: "+formatTime(time))
-
-level = 1
-
-startPuzzle()
-
-},300)
-
-}
-
-}
-
-}
-
-
-
-// FORMAT TIMER
-function formatTime(t){
-
-let minutes = Math.floor(t / 60)
-
-let seconds = Math.floor(t % 60)
-
-let ms = Math.floor((t - Math.floor(t)) * 100)
-
-if(seconds < 10) seconds = "0"+seconds
-if(ms < 10) ms = "0"+ms
-
-return minutes + ":" + seconds + "." + ms
-
-}
-
-
-
-// SAVE LEADERBOARD
-function saveLeaderboard(name, time){
-
-leaderboard.push({
-name:name,
-time:time
-})
-
-leaderboard.sort((a,b)=> a.time - b.time)
-
-leaderboard = leaderboard.slice(0,5)
-
-localStorage.setItem("leaderboard", JSON.stringify(leaderboard))
-
-renderLeaderboard()
-
-}
-
-
-
-// RENDER LEADERBOARD
-function renderLeaderboard(){
-
-const boardUI = document.getElementById("leaderboardList")
-
-if(!boardUI) return
-
-boardUI.innerHTML=""
-
-leaderboard.forEach((player,index)=>{
-
-let medal=""
-
-if(index===0) medal="🥇"
-else if(index===1) medal="🥈"
-else if(index===2) medal="🥉"
-else medal=(index+1)+"."
-
-let row=document.createElement("li")
-
-row.innerHTML = `${medal} ${player.name} - ${formatTime(player.time)}`
-
-boardUI.appendChild(row)
-
-})
-
-}
-
-
-
-// RESET LEADERBOARD
-function resetLeaderboard(){
-
-localStorage.removeItem("leaderboard")
-
-leaderboard=[]
-
-renderLeaderboard()
-
-}
-
-
-
-// LOAD
-window.onload = ()=>{
-
-renderLeaderboard()
-
-}
-
-function startAll(){
+    function createPuzzle(grid, image) {
+        board.innerHTML = ""
+        board.style.gridTemplateColumns = `repeat(${grid},1fr)`
+        board.style.gridTemplateRows = `repeat(${grid},1fr)`
+
+        let positions = []
+        for (let i = 0; i < grid * grid; i++) {
+            positions.push(i)
+        }
+        positions.sort(() => Math.random() - 0.5)
+
+        let size = 450 / grid
+
+        positions.forEach(i => {
+            let tile = document.createElement("div")
+            tile.className = "tile"
+
+            let x = i % grid
+            let y = Math.floor(i / grid)
+
+            tile.style.backgroundImage = `url(${image})`
+            tile.style.backgroundSize = "450px 450px"
+            tile.style.backgroundPosition = `-${x*size}px -${y*size}px`
+
+            tile.dataset.correct = i
+
+            tile.addEventListener("click", () => swapTile(tile))
+
+            board.appendChild(tile)
+        })
+    }
+
+    function swapTile(tile) {
+        if (!firstTile) {
+            firstTile = tile
+            tile.style.border = "3px solid red"
+        } else {
+            let tempBg = firstTile.style.backgroundPosition
+            let tempCorrect = firstTile.dataset.correct
+
+            firstTile.style.backgroundPosition = tile.style.backgroundPosition
+            firstTile.dataset.correct = tile.dataset.correct
+
+            tile.style.backgroundPosition = tempBg
+            tile.dataset.correct = tempCorrect
+
+            firstTile.style.border = "none"
+            firstTile = null
+
+            document.getElementById("moveSound").play()
+
+            checkWin()
+        }
+    }
+
+    function checkWin() {
+        let tiles = document.querySelectorAll(".tile")
+        let win = true
+        tiles.forEach((tile, index) => {
+            if (tile.dataset.correct != index) {
+                win = false
+            }
+        })
+
+        if (win) {
+            document.getElementById("winSound").play()
+
+            if (level < levels.length) {
+                level++
+                setTimeout(() => {
+                    startPuzzle()
+                }, 500)
+            } else {
+                // Semua level selesai
+                setTimeout(() => {
+                    alert("🏆 Semua level selesai! Selamat!")
+                    level = 1
+                    startPuzzle()
+                }, 300)
+            }
+        }
+    }
+
+    function startAll() {
+        startPuzzle();
+        startHandMouse();
+    }
+
+    // load awal
+    window.onload = () => {
+        window.onload = () => {
+
+// Langsung mulai puzzle
+startPuzzle();
+
+// Langsung aktifkan Virtual Mouse + Kamera
+startHandMouse();
+
+cameraRunning = true;
+
+};
 
 startPuzzle();
 
 startHandMouse();
 
-}
-// ui.js
+cameraRunning = true;
 
-// Fungsi untuk reset leaderboard
-function resetLeaderboard() {
-    // Hapus data leaderboard dari localStorage
-    localStorage.removeItem('leaderboard');
-    
-    // Update tampilan leaderboard
-    updateLeaderboardDisplay();
-    
-    // Tampilkan notifikasi (opsional)
-    alert('Leaderboard has been reset!');
+const btn = document.getElementById("cameraBtn");
+if (btn) {
+    btn.innerText = "Stop Camera";
 }
 
-// Fungsi untuk update tampilan leaderboard
-function updateLeaderboardDisplay() {
-    const leaderboardList = document.getElementById('leaderboardList');
-    if (leaderboardList) {
-        // Kosongkan list
-        leaderboardList.innerHTML = '';
+};
         
-        // Tampilkan pesan kosong
-        const emptyMessage = document.createElement('li');
-        emptyMessage.textContent = 'No data available';
-        emptyMessage.style.listStyle = 'none';
-        emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.padding = '10px';
-        emptyMessage.style.color = '#888';
-        leaderboardList.appendChild(emptyMessage);
-    }
-}
-
-// Event listener untuk tombol reset
-document.addEventListener('DOMContentLoaded', function() {
-    const resetBtn = document.getElementById('resetLeaderboardBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', resetLeaderboard);
-    }
-});
-</script>
+    </script>
 
 </body>
 </html>

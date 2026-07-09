@@ -30,7 +30,7 @@
             display: none;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 20px red;
-            transition: width 0.15s, height 0.15s, background 0.15s;
+            transition: width 0.15s, height 0.15s, background 0.15s, box-shadow 0.15s;
         }
         #cursor.scroll-mode {
             width: 32px;
@@ -42,7 +42,17 @@
             width: 28px;
             height: 28px;
             background: #22c55e;
-            box-shadow: 0 0 30px #22c55e;
+            box-shadow: 0 0 40px #22c55e, inset 0 0 12px rgba(255, 255, 255, 0.4);
+        }
+        #cursor.idle-mode {
+            background: #ef4444;
+            box-shadow: 0 0 20px #ef4444;
+        }
+        #cursor.three-mode {
+            width: 30px;
+            height: 30px;
+            background: #eab308;
+            box-shadow: 0 0 35px #eab308, inset 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         /* ── Frame overlay ── */
@@ -187,6 +197,14 @@
         }
         #gestureIndicator .gesture-icon.idle {
             background: #64748b;
+            color: white;
+        }
+        #gestureIndicator .gesture-icon.pinch {
+            background: #22c55e;
+            color: white;
+        }
+        #gestureIndicator .gesture-icon.three {
+            background: #eab308;
             color: white;
         }
         #gestureIndicator .gesture-text {
@@ -410,6 +428,38 @@
             background: #0f172a;
             color: #e2e8f0;
         }
+
+        /* ── Legend badge ── */
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 3px 10px 3px 6px;
+            border-radius: 20px;
+            border: 1px solid #1e293b;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .legend-dot.pinch {
+            background: #22c55e;
+        }
+        .legend-dot.scroll {
+            background: #3b82f6;
+        }
+        .legend-dot.three {
+            background: #eab308;
+        }
+        .legend-dot.five {
+            background: #a855f7;
+        }
     </style>
 </head>
 
@@ -437,19 +487,18 @@
                         <span class="text-white font-bold">6</span>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span><i class="fa-regular fa-star text-yellow-400 mr-1"></i> Klik kartu untuk detail</span>
+                        <span><i class="fa-regular fa-star text-yellow-400 mr-1"></i> 3 jari = next hewan</span>
                         <span class="text-white font-bold"><i class="fa-solid fa-arrow-right"></i></span>
                     </div>
                 </div>
 
                 <!-- Gesture Legend -->
                 <div class="w-full text-xs text-slate-400 bg-slate-900/30 rounded-xl p-3 mb-4">
-                    <div class="flex items-center justify-center gap-4 flex-wrap">
-                        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-red-500"></span> 1 jari = gerak</span>
-                        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span> 2 jari = scroll</span>
-                        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-green-500"></span> 3 jari = klik</span>
-                        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-yellow-500"></span> 4 jari = ganti hewan</span>
-                        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-purple-500"></span> 5 jari = foto</span>
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        <span class="legend-item"><span class="legend-dot pinch"></span> cubit = klik</span>
+                        <span class="legend-item"><span class="legend-dot scroll"></span> 2 rapat = scroll</span>
+                        <span class="legend-item"><span class="legend-dot three"></span> 3 jari = next</span>
+                        <span class="legend-item"><span class="legend-dot five"></span> 5 jari = foto</span>
                     </div>
                 </div>
 
@@ -467,6 +516,18 @@
                 <div class="relative w-full max-w-[640px] mx-auto rounded-xl overflow-hidden bg-black">
                     <video id="video" autoplay playsinline muted class="w-full h-auto aspect-video block object-cover"></video>
                     <div id="frameOverlay"></div>
+                    <!-- Overlay gestur kecil -->
+                    <div class="absolute bottom-3 left-3 flex gap-1.5 z-20">
+                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> cubit
+                        </span>
+                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> 2 rapat
+                        </span>
+                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span> 3 = next
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Frame Selector -->
@@ -485,7 +546,7 @@
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-list text-emerald-400"></i>
                     Daftar Hewan
-                    <span class="text-sm font-normal text-slate-400 ml-auto">Klik kartu untuk detail</span>
+                    <span class="text-sm font-normal text-slate-400 ml-auto">3 jari = next hewan</span>
                 </h2>
                 <div id="animalGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                     <!-- Akan di-generate oleh JS -->
@@ -507,11 +568,10 @@
         <div>
             <div class="gesture-text" id="gestureText">Tangan terdeteksi</div>
             <div class="gesture-keys">
-                <span>1 jari: gerak</span>
-                <span>2 jari: scroll</span>
-                <span>3 jari: klik</span>
-                <span>4 jari: ganti</span>
-                <span>5 jari: foto</span>
+                <span>🤏 cubit = klik</span>
+                <span>✌️ 2 rapat = scroll</span>
+                <span>🖐️ 3 = next</span>
+                <span>🖐️ 5 = foto</span>
             </div>
         </div>
     </div>
@@ -665,12 +725,14 @@
         // ================================================================
 
         const animalGrid = document.getElementById('animalGrid');
+        let currentAnimalIndex = 0;
 
         function renderAnimals() {
             animalGrid.innerHTML = '';
-            animals.forEach((animal) => {
+            animals.forEach((animal, idx) => {
                 const card = document.createElement('div');
                 card.className = 'animal-card';
+                card.dataset.index = idx;
 
                 const img = document.createElement('img');
                 img.className = 'animal-image';
@@ -703,6 +765,7 @@
                 card.appendChild(badge);
 
                 card.addEventListener('click', function(e) {
+                    currentAnimalIndex = idx;
                     openModal(animal);
                 });
 
@@ -761,6 +824,29 @@
             }
         });
 
+        // ── NEXT ANIMAL (untuk gestur 3 jari) ──
+        function nextAnimal() {
+            currentAnimalIndex = (currentAnimalIndex + 1) % animals.length;
+            const animal = animals[currentAnimalIndex];
+            openModal(animal);
+            // Scroll ke kartu yang aktif
+            const cards = document.querySelectorAll('.animal-card');
+            if (cards[currentAnimalIndex]) {
+                cards[currentAnimalIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Efek highlight sementara
+                cards[currentAnimalIndex].style.borderColor = '#eab308';
+                cards[currentAnimalIndex].style.boxShadow = '0 0 30px rgba(234, 179, 8, 0.4)';
+                setTimeout(() => {
+                    cards[currentAnimalIndex].style.borderColor = '';
+                    cards[currentAnimalIndex].style.boxShadow = '';
+                }, 1500);
+            }
+            console.log(`🔄 Next animal: ${animal.name} (${currentAnimalIndex + 1}/${animals.length})`);
+        }
+
+        // Expose ke window agar bisa dipanggil dari gesture
+        window.nextAnimal = nextAnimal;
+
         // ================================================================
         // 4. DEKLARASI GLOBAL VIRTUAL MOUSE
         // ================================================================
@@ -784,14 +870,21 @@
         let scrollActive = false;
         let lastScrollY = 0;
         let scrollAccumulated = 0;
-        const SCROLL_THRESHOLD = 12; // pixels movement to trigger scroll
-        const SCROLL_MULTIPLIER = 0.8;
+        const SCROLL_THRESHOLD = 10;
+        const SCROLL_MULTIPLIER = 0.9;
+
+        // ── Pinch & two-finger thresholds ──
+        const PINCH_THRESHOLD = 0.045;
+        const TWO_FINGER_THRESHOLD = 0.055;
 
         const frameData = [];
         let activeFrameIndex = -1;
 
-        // ── Gesture indicator timeout ──
+        const STORAGE_KEY = "virtual_mouse_frames";
+        const ACTIVE_KEY = "virtual_mouse_active_frame";
+
         let gestureTimeout = null;
+        let gestureHideTimeout = null;
 
         // ================================================================
         // 5. GENERATE DEFAULT FRAMES
@@ -887,9 +980,34 @@
         function initFrameSlots() {
             frameSlots.innerHTML = '';
             frameData.length = 0;
-            for (let i = 0; i < 5; i++) {
-                const dataURL = defaultFrames[i] || '';
-                frameData.push({ dataURL, file: null });
+
+            // baca frame dari index.html
+            let savedFrames = [];
+            let activeIndex = 0;
+
+            try{
+                savedFrames = JSON.parse(
+                    localStorage.getItem(STORAGE_KEY) || "[]"
+                );
+
+                activeIndex = parseInt(
+                    localStorage.getItem(ACTIVE_KEY) || "0"
+                );
+
+            }catch(e){
+                console.error(e);
+            }
+
+            for(let i=0;i<5;i++){
+
+                const dataURL =
+                    savedFrames[i] ||
+                    defaultFrames[i];
+
+                frameData.push({
+                    dataURL,
+                    file:null
+                });
                 const slot = document.createElement('div');
                 slot.className =
                     'frame-slot relative w-16 h-16 md:w-20 md:h-20 rounded-xl border-3 border-slate-600 bg-slate-700 cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-slate-400 hover:scale-105';
@@ -948,7 +1066,7 @@
                 });
                 frameSlots.appendChild(slot);
             }
-            selectFrame(0);
+            selectFrame(activeIndex);
         }
 
         function selectFrame(index) {
@@ -957,6 +1075,13 @@
             if (slots[index]) {
                 slots[index].classList.add('active');
                 activeFrameIndex = index;
+                localStorage.setItem(ACTIVE_KEY,index);
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(
+                        frameData.map(f=>f.dataURL)
+                    )
+                );
                 const data = frameData[index]?.dataURL;
                 if (data) applyFrameOverlay(data);
                 else clearFrameOverlay();
@@ -992,27 +1117,36 @@
             icon.className = 'gesture-icon ' + mode;
             if (mode === 'scroll') {
                 icon.innerHTML = '<i class="fa-solid fa-arrow-up-wide-short"></i>';
-                txt.textContent = text || 'Scroll mode aktif';
-            } else if (mode === 'click') {
+                txt.textContent = text || '✌️ 2 rapat: scroll';
+            } else if (mode === 'click' || mode === 'pinch') {
                 icon.innerHTML = '<i class="fa-regular fa-hand-pointer"></i>';
-                txt.textContent = text || 'Klik!';
+                txt.textContent = text || '🤏 cubit: klik!';
             } else if (mode === 'idle') {
                 icon.innerHTML = '<i class="fa-regular fa-hand"></i>';
-                txt.textContent = text || 'Tangan terdeteksi';
+                txt.textContent = text || '👆 1 jari: gerak';
+            } else if (mode === 'three') {
+                icon.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
+                txt.textContent = text || '🖐️ 3 jari: next hewan';
+            } else if (mode === 'five') {
+                icon.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                txt.textContent = text || '🖐️ 5 jari: foto!';
             } else {
                 icon.innerHTML = '<i class="fa-regular fa-hand"></i>';
-                txt.textContent = text || 'Mode aktif';
+                txt.textContent = text || 'Gestur terdeteksi';
             }
             clearTimeout(gestureTimeout);
+            clearTimeout(gestureHideTimeout);
             gestureTimeout = setTimeout(() => {
                 if (gestureIndicator) {
                     gestureIndicator.style.opacity = '0';
-                    setTimeout(() => {
-                        if (gestureIndicator) gestureIndicator.style.display = 'none';
-                        gestureIndicator.style.opacity = '1';
+                    gestureHideTimeout = setTimeout(() => {
+                        if (gestureIndicator) {
+                            gestureIndicator.style.display = 'none';
+                            gestureIndicator.style.opacity = '1';
+                        }
                     }, 300);
                 }
-            }, 2500);
+            }, 2000);
         }
 
         function hideGesture() {
@@ -1022,7 +1156,8 @@
         }
 
         // ================================================================
-        // 7. VIRTUAL MOUSE - MEDIAPIPE HANDS dengan SCROLL 2 JARI
+        // 7. VIRTUAL MOUSE - MEDIAPIPE HANDS
+        //    GESTUR: cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto
         // ================================================================
 
         function initVirtualMouse() {
@@ -1055,6 +1190,9 @@
 
                     const hand = results.multiHandLandmarks[0];
                     const indexFinger = hand[8];
+                    const thumbTip = hand[4];
+                    const middleTip = hand[12];
+
                     const x = (1 - indexFinger.x) * window.innerWidth;
                     const y = indexFinger.y * window.innerHeight;
 
@@ -1063,7 +1201,23 @@
                         cursor.style.display = 'block';
                         cursor.style.left = x + 'px';
                         cursor.style.top = y + 'px';
+                        cursor.classList.remove('scroll-mode', 'click-mode', 'three-mode');
+                        cursor.classList.add('idle-mode');
                     }
+
+                    // ── Jarak pinch (ibu jari - telunjuk) ──
+                    const pinchDist = Math.hypot(
+                        thumbTip.x - indexFinger.x,
+                        thumbTip.y - indexFinger.y,
+                        thumbTip.z - indexFinger.z
+                    );
+
+                    // ── Jarak 2 jari rapat (telunjuk - tengah) ──
+                    const twoFingerDist = Math.hypot(
+                        indexFinger.x - middleTip.x,
+                        indexFinger.y - middleTip.y,
+                        indexFinger.z - middleTip.z
+                    );
 
                     // ── Hitung jumlah jari terbuka ──
                     let fingerCount = 0;
@@ -1073,87 +1227,97 @@
                     if (hand[20].y < hand[18].y) fingerCount++; // pinky
                     if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++; // thumb
 
-                    // ── GESTURE MAPPING ──
-                    // 1 finger: cursor movement (default)
-                    // 2 fingers: SCROLL
-                    // 3 fingers: CLICK
-                    // 4 fingers: next animal
-                    // 5 fingers: take photo
+                    // ── GESTURE 1: KLIK (cubit / pinch) ──
+                    if (pinchDist < PINCH_THRESHOLD && !clickCooldown) {
+                        clickCooldown = true;
+                        if (cursor) {
+                            cursor.classList.remove('idle-mode');
+                            cursor.classList.add('click-mode');
+                        }
+                        showGesture('pinch', '🤏 cubit: klik!');
 
-                    // Reset cursor style
-                    if (cursor) {
-                        cursor.classList.remove('scroll-mode', 'click-mode');
+                        const element = document.elementFromPoint(x, y);
+                        if (element && element !== cursor) {
+                            element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                            console.log('🖱️ Klik (cubit) pada:', element.tagName, element.className || '');
+                        }
+
+                        setTimeout(() => {
+                            clickCooldown = false;
+                            if (cursor) {
+                                cursor.classList.remove('click-mode');
+                                cursor.classList.add('idle-mode');
+                            }
+                        }, 600);
                     }
-
-                    if (fingerCount === 2) {
-                        // ── SCROLL MODE ──
+                    // ── GESTURE 2: SCROLL (2 jari rapat, bukan pinch) ──
+                    else if (twoFingerDist < TWO_FINGER_THRESHOLD && pinchDist > PINCH_THRESHOLD) {
                         const currentY = indexFinger.y * window.innerHeight;
                         if (!scrollActive) {
                             scrollActive = true;
                             lastScrollY = currentY;
                             scrollAccumulated = 0;
-                            if (cursor) cursor.classList.add('scroll-mode');
-                            showGesture('scroll', '2 jari: scroll');
+                            if (cursor) {
+                                cursor.classList.remove('idle-mode');
+                                cursor.classList.add('scroll-mode');
+                            }
+                            showGesture('scroll', '✌️ 2 rapat: scroll');
                         } else {
                             const delta = lastScrollY - currentY;
                             scrollAccumulated += delta;
                             if (Math.abs(scrollAccumulated) >= SCROLL_THRESHOLD) {
                                 const scrollAmount = scrollAccumulated * SCROLL_MULTIPLIER;
                                 window.scrollBy(0, scrollAmount);
+                                const dir = scrollAmount > 0 ? '⬇️' : '⬆️';
+                                showGesture('scroll', `✌️ scroll ${dir}`);
                                 scrollAccumulated = 0;
                             }
                             lastScrollY = currentY;
                         }
-                    } else {
+                    }
+                    // ── GESTURE LAINNYA (berdasarkan jumlah jari) ──
+                    else {
                         // Reset scroll state
                         if (scrollActive) {
                             scrollActive = false;
                             scrollAccumulated = 0;
-                        }
-
-                        // ── CLICK (3 fingers) ──
-                        if (fingerCount === 3 && !clickCooldown) {
-                            clickCooldown = true;
-                            if (cursor) cursor.classList.add('click-mode');
-                            showGesture('click', '3 jari: klik!');
-                            const element = document.elementFromPoint(x, y);
-                            if (element && element !== cursor) {
-                                element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                                console.log('Klik pada:', element.tagName, element.className || '');
+                            if (cursor) {
+                                cursor.classList.remove('scroll-mode');
+                                cursor.classList.add('idle-mode');
                             }
-                            setTimeout(() => {
-                                clickCooldown = false;
-                                if (cursor) cursor.classList.remove('click-mode');
-                            }, 600);
                         }
 
-                        // ── NEXT ANIMAL (4 fingers) ──
-                        if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
+                        // ── 3 jari: NEXT ANIMAL (sebelumnya 4 jari) ──
+                        if (fingerCount === 3 && typeof window.nextAnimal === 'function' && !filterCooldown) {
                             filterCooldown = true;
-                            showGesture('idle', '4 jari: ganti hewan');
+                            if (cursor) {
+                                cursor.classList.remove('idle-mode');
+                                cursor.classList.add('three-mode');
+                            }
+                            showGesture('three', '🖐️ 3 jari: next hewan');
                             window.nextAnimal();
-                            setTimeout(() => { filterCooldown = false; }, 1500);
+                            setTimeout(() => {
+                                filterCooldown = false;
+                                if (cursor) {
+                                    cursor.classList.remove('three-mode');
+                                    cursor.classList.add('idle-mode');
+                                }
+                            }, 1500);
                         }
 
-                        // ── TAKE PHOTO (5 fingers) ──
+                        // ── 5 jari: take photo ──
                         if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
                             photoCooldown = true;
-                            showGesture('idle', '5 jari: ambil foto!');
+                            showGesture('five', '🖐️ 5 jari: foto!');
                             window.startCountdown();
                             setTimeout(() => { photoCooldown = false; }, 7000);
                         }
 
-                        // Tampilkan gesture indicator untuk 1 finger (idle)
+                        // ── 1 jari: idle (cursor bergerak) ──
                         if (fingerCount === 1) {
-                            showGesture('idle', '1 jari: gerak kursor');
+                            showGesture('idle', '👆 1 jari: gerak kursor');
                         } else if (fingerCount === 0) {
-                            // tidak ada gesture
-                        } else if (fingerCount === 3) {
-                            // sudah ditangani di atas
-                        } else if (fingerCount === 4) {
-                            // sudah
-                        } else if (fingerCount >= 5) {
-                            // sudah
+                            // tidak ada tangan terbuka
                         }
                     }
                 });
@@ -1166,7 +1330,7 @@
                     height: 480
                 });
                 camera.start();
-                console.log('Virtual Mouse Aktif — 2 jari = scroll, 3 jari = klik');
+                console.log('✅ Virtual Mouse aktif — cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto');
 
             } catch (err) {
                 console.error('Gagal inisialisasi MediaPipe:', err);
@@ -1197,7 +1361,7 @@
             startCameraDisplay();
             initVirtualMouse();
             if (cursor) cursor.style.display = 'block';
-            console.log('🐾 Hewan.html siap — 2 jari = scroll, 3 jari = klik!');
+            console.log('🐾 Hewan.html siap — cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto');
             console.log('📁 Pastikan file gambar ada di folder ./assets/animals/');
         });
 
@@ -1219,7 +1383,7 @@
             }
         };
 
-        console.log('✅ Hewan.html — 2 jari terbuka untuk scroll, 3 jari untuk klik');
+        console.log('✅ Hewan.html — cubit=klik | 2 rapat=scroll | 3 jari=next animal | 5=foto');
     </script>
 
 </body>
