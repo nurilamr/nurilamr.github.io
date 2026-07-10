@@ -324,6 +324,99 @@
                 white-space: normal;
             }
         }
+
+        /* ── Nama user di header - ATRAKTIF ── */
+        .user-greeting {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.6), rgba(59, 130, 246, 0.15));
+            padding: 6px 20px 6px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+            transition: all 0.3s ease;
+        }
+        .user-greeting:hover {
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 4px 30px rgba(59, 130, 246, 0.25);
+            transform: scale(1.02);
+        }
+        .user-greeting .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+        }
+        .user-greeting .greeting-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+        .user-greeting .greeting-text .name {
+            color: #f1f5f9;
+            font-weight: 700;
+            font-size: 1.05rem;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .user-greeting .welcome-icon {
+            color: #facc15;
+            font-size: 0.8rem;
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(15deg);
+            }
+            75% {
+                transform: rotate(-10deg);
+            }
+        }
+
+        /* ── Badge container ── */
+        .top-badges {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .top-badges .badge-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px 4px 10px;
+            border-radius: 30px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.75rem;
+            color: #94a3b8;
+            backdrop-filter: blur(4px);
+        }
+        .top-badges .badge-item i {
+            font-size: 0.7rem;
+        }
+        .top-badges .badge-item .highlight-text {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -340,25 +433,35 @@
 
         <!-- ─── HEADER ─── -->
         <div class="text-center mb-6 md:mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-full text-3xl md:text-4xl shadow-lg mb-3">
+            <div class="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full text-3xl md:text-4xl shadow-lg shadow-blue-500/30 mb-3">
                 <i class="fa-solid fa-hand"></i>
             </div>
-            <h1 class="text-2xl md:text-4xl font-bold tracking-tight">Pilih Mode Permainan</h1>
+            <h1 class="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+                Pilih Mode Permainan
+            </h1>
             <p class="text-slate-400 text-sm md:text-base mt-1 max-w-md mx-auto">
                 Pilih salah satu mode di bawah ini untuk memulai petualanganmu
             </p>
 
-            <!-- Badge foto -->
-            <div class="mt-3 flex flex-wrap items-center justify-center gap-3">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-xs md:text-sm text-slate-300">
-                    <span class="photo-badge">
-                        <span class="dot"></span>
+            <!-- Greeting + badge foto -->
+            <div class="top-badges">
+                <!-- Nama User - ATRAKTIF & SINKRON DARI INDEX.HTML -->
+                <div class="user-greeting" id="userGreeting">
+                    <div class="avatar" id="userAvatar">👤</div>
+                    <span class="greeting-text">
+                        Halo, <span id="userNameDisplay" class="name">Pengunjung</span>
+                    </span>
+                    <span class="welcome-icon">👋</span>
+                </div>
+
+                <!-- Badge foto -->
+                <div class="badge-item">
+                    <i class="fa-regular fa-image text-purple-400"></i>
+                    <span class="photo-badge" style="background:transparent;border:none;padding:0;font-size:inherit;color:inherit;">
+                        <span class="dot" style="width:6px;height:6px;"></span>
                         <span id="photoCountBadge">0 foto</span>
                     </span>
                 </div>
-                <button onclick="clearAllPhotos()" class="text-xs text-slate-400 hover:text-red-400 transition-colors">
-                    <i class="fa-regular fa-trash-can"></i> Hapus semua
-                </button>
             </div>
         </div>
 
@@ -479,11 +582,37 @@
         const STORAGE_KEY = "virtual_mouse_frames";
         const ACTIVE_KEY = "virtual_mouse_active_frame";
         const PHOTOS_KEY = "virtual_mouse_photos";
+        const USER_NAME_KEY = "virtual_mouse_user_name"; // Key untuk nama user
 
         let frameDataURL = null;
         let frameIndex = 0;
         let photos = [];
+        let userName = "Pengunjung";
 
+        // ── BACA NAMA USER DARI localStorage (disimpan oleh index.html) ──
+        try {
+            const savedName = localStorage.getItem(USER_NAME_KEY);
+            if (savedName && savedName.trim() !== "") {
+                userName = savedName.trim();
+            }
+        } catch (e) {
+            console.warn("Gagal membaca nama user:", e);
+        }
+
+        // ── TAMPILKAN NAMA DI HEADER DENGAN AVATAR ──
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+        if (userNameDisplay) {
+            userNameDisplay.textContent = userName;
+        }
+        if (userAvatar && userName !== "Pengunjung") {
+            // Tampilkan inisial jika nama bukan "Pengunjung"
+            userAvatar.textContent = userName.charAt(0).toUpperCase();
+        } else if (userAvatar) {
+            userAvatar.textContent = '👤';
+        }
+
+        // ── BACA FRAME DATA ──
         try {
             const frames = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
             frameIndex = parseInt(localStorage.getItem(ACTIVE_KEY) || "0");
@@ -587,7 +716,7 @@
         }
 
         // ================================================================
-        // 4. FUNGSI FOTO (hanya 1 foto terbaru)
+        // 4. FUNGSI FOTO (hanya 1 foto terbaru, tanpa tombol hapus semua)
         // ================================================================
 
         const photoSingle = document.getElementById('photoSingle');
@@ -631,7 +760,7 @@
                 img.alt = `Foto ${latest.id}`;
                 photoSingle.appendChild(img);
 
-                // Overlay info & hapus
+                // Overlay info & hapus (hanya tombol hapus satu foto)
                 const overlay = document.createElement('div');
                 overlay.className = 'photo-overlay';
                 overlay.innerHTML = `
@@ -658,16 +787,6 @@
             showHint('🗑️ Foto terbaru dihapus', 800);
         }
 
-        function clearAllPhotos() {
-            if (photos.length === 0) return;
-            if (confirm('Hapus semua foto?')) {
-                photos = [];
-                savePhotos();
-                renderPhoto();
-                showHint('🗑️ Semua foto dihapus', 800);
-            }
-        }
-
         function updateBadge() {
             const count = photos.length;
             photoCountBadge.textContent = count === 0 ? '0 foto' : count === 1 ? '1 foto' : `${count} foto`;
@@ -678,6 +797,18 @@
             if (e.key === PHOTOS_KEY) {
                 console.log('🔄 Deteksi perubahan foto dari tab lain, reload...');
                 loadPhotos();
+            }
+            if (e.key === USER_NAME_KEY) {
+                console.log('🔄 Deteksi perubahan nama user dari tab lain, update...');
+                const newName = e.newValue || "Pengunjung";
+                if (userNameDisplay) {
+                    userNameDisplay.textContent = newName;
+                }
+                if (userAvatar && newName !== "Pengunjung") {
+                    userAvatar.textContent = newName.charAt(0).toUpperCase();
+                } else if (userAvatar) {
+                    userAvatar.textContent = '👤';
+                }
             }
         });
 
@@ -1092,17 +1223,17 @@
 
         window.addEventListener('resize', function() {});
 
-        // Ekspose fungsi untuk kompatibilitas
+        // Ekspose fungsi untuk kompatibilitas (clearAllPhotos dihapus)
         window.nextAnimal = function() {
             console.log('🔄 Next animal (dari option)');
             showHint('🐾 Ganti hewan (di halaman Hewan)', 1000);
         };
-        window.clearAllPhotos = clearAllPhotos;
 
         console.log('📦 Option page — hanya menampilkan 1 foto terbaru dengan ukuran sama dengan video');
         console.log('🗑️ Gestur 5 jari untuk foto telah dihapus.');
         console.log('🔄 Sinkronisasi real-time aktif — foto terbaru akan langsung muncul.');
         console.log('🧹 Filter/frame pada video telah dihapus.');
+        console.log('👤 Nama user ditampilkan secara atraktif dan disinkronkan dari index.html.');
     </script>
 
 </body>

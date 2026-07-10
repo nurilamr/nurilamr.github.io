@@ -475,6 +475,7 @@
     </style>
 </head>
 
+
 <body class="bg-slate-900 text-white font-sans antialiased min-h-screen">
 
     <!-- ─── FLASH OVERLAY ─── -->
@@ -503,7 +504,8 @@
                     </button>
                 </div>
 
-                <input type="text" id="nameInput" placeholder="Masukkan Nama" readonly
+                <!-- INPUT NAMA AKTIF (tanpa readonly) -->
+                <input type="text" id="nameInput" placeholder="Masukkan Nama"
                 class="w-full h-12 md:h-14 border-none outline-none rounded-xl px-4 text-base md:text-lg bg-white text-slate-900 mb-5 shadow-inner" />
 
                 <div class="flex flex-col gap-3 w-full">
@@ -635,6 +637,7 @@
     const STORAGE_KEY = 'virtual_mouse_frames';
     const ACTIVE_KEY = 'virtual_mouse_active_frame';
     const PHOTOS_KEY = 'virtual_mouse_photos';
+    const USER_NAME_KEY = 'virtual_mouse_user_name'; // Key untuk nama user
 
     // ================================================================
     // 3. GENERATE DEFAULT FRAMES
@@ -1137,7 +1140,10 @@
 
     function startGame() {
         if (!input) { alert('Input nama tidak tersedia'); return; }
-        if (input.value.trim() === '') { alert('Masukkan nama dahulu'); return; }
+        const name = input.value.trim();
+        if (name === '') { alert('Masukkan nama dahulu'); return; }
+        // Simpan nama ke localStorage
+        localStorage.setItem(USER_NAME_KEY, name);
         window.location.href = 'option.html';
     }
 
@@ -1602,8 +1608,25 @@
     }
 
     // ================================================================
-    // 16. INISIALISASI
+    // 16. INISIALISASI & SINKRONISASI NAMA
     // ================================================================
+
+    // Saat halaman dimuat, isi input dengan nama yang tersimpan
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedName = localStorage.getItem(USER_NAME_KEY);
+        if (savedName) {
+            input.value = savedName;
+        }
+        // Event listener untuk menyimpan nama saat diketik
+        input.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name !== '') {
+                localStorage.setItem(USER_NAME_KEY, name);
+            } else {
+                localStorage.removeItem(USER_NAME_KEY);
+            }
+        });
+    });
 
     initFrameSlots();
     loadPhotos();
@@ -1614,6 +1637,7 @@
     console.log('   ✌️ 2 jari rapat (telunjuk + tengah) = gulir');
     console.log('   🖐️ 5 jari = foto (countdown 5 detik)');
     console.log('📸 Foto tersimpan di localStorage dan muncul di bawah video.');
+    console.log('👤 Nama user disimpan dan akan ditampilkan di halaman option.html');
 </script>
 
 </body>
