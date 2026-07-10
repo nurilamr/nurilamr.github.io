@@ -71,9 +71,21 @@
             box-shadow: 0 0 20px red;
             transition: none;
         }
+        #cursor.clicking {
+            background: #4ade80;
+            box-shadow: 0 0 40px #4ade80;
+            width: 20px;
+            height: 20px;
+        }
+        #cursor.scrolling {
+            background: #60a5fa;
+            box-shadow: 0 0 40px #60a5fa;
+            width: 30px;
+            height: 30px;
+        }
 
         /* ── Video Kamera ── */
-        #video {
+        #videoDisplay {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -95,128 +107,300 @@
             pointer-events: none;
         }
 
-        /* ── Container kamera ── */
+        /* ── Canvas Landmark ── */
+        #landmarkCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            border-radius: 16px;
+            display: block;
+        }
+
+        /* ── Container utama kamera + galeri ── */
+        .camera-gallery-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) {
+            .camera-gallery-wrap {
+                flex-direction: row;
+                align-items: stretch;
+            }
+        }
+
         .camera-container {
             position: relative;
             width: 100%;
-            max-width: 480px;
             aspect-ratio: 4/3;
             border-radius: 16px;
             overflow: hidden;
             background: #0f172a;
             border: 2px solid #334155;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            .camera-container {
+                width: 50%;
+                max-width: 480px;
+            }
         }
 
-        /* ── badge frame aktif ── */
+        /* ── Galeri foto ── */
+        .photo-gallery-wrap {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 16px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 8px;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        @media (min-width: 768px) {
+            .photo-gallery-wrap {
+                width: 50%;
+                max-width: 480px;
+                aspect-ratio: 4/3;
+            }
+        }
+        .photo-gallery-wrap .empty-gallery {
+            width: 100%;
+            text-align: center;
+            color: #475569;
+            font-size: 14px;
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            height: 100%;
+        }
+        .photo-gallery-wrap .empty-gallery i {
+            font-size: 32px;
+            color: #334155;
+        }
+        .photo-gallery-wrap .photo-item {
+            width: calc(33.33% - 6px);
+            aspect-ratio: 4/3;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #1e293b;
+            transition: all 0.2s ease;
+            position: relative;
+            background: #0a0a0a;
+            flex-shrink: 0;
+        }
+        @media (min-width: 480px) {
+            .photo-gallery-wrap .photo-item {
+                width: calc(25% - 6px);
+            }
+        }
+        .photo-gallery-wrap .photo-item:hover {
+            border-color: #3b82f6;
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+        .photo-gallery-wrap .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .photo-gallery-wrap .photo-item .photo-index {
+            position: absolute;
+            bottom: 3px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 8px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .photo-gallery-wrap .photo-item .delete-photo {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            font-size: 9px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .photo-gallery-wrap .photo-item:hover .delete-photo {
+            display: flex;
+        }
+        .photo-gallery-wrap .photo-item .delete-photo:hover {
+            background: #ef4444;
+            transform: scale(1.15);
+        }
+
+        /* ── badge frame ── */
         .badge-frame {
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(4px);
         }
 
-        /* ── Indikator gestur ── */
-        #gestureIndicator {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            z-index: 99999;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-            transition: opacity 0.2s;
-        }
-        #gestureIndicator .icon {
-            font-size: 18px;
-        }
-        #gestureIndicator .label {
-            letter-spacing: 0.5px;
-        }
-        #gestureIndicator.show {
+        /* ── Legend landmark ── */
+        #landmarkLegend {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 6;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 9px;
+            color: #cbd5e1;
             display: flex;
+            flex-direction: column;
+            gap: 2px;
+            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.4;
         }
-        #gestureIndicator.click {
-            border-color: #3b82f6;
+        #landmarkLegend .row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        #gestureIndicator.scroll-up {
-            border-color: #22c55e;
-        }
-        #gestureIndicator.scroll-down {
-            border-color: #eab308;
+        #landmarkLegend .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
-        /* ── Responsive camera ── */
+        /* ── Responsive ── */
         @media (max-width: 640px) {
-            .camera-container {
+            .camera-container,
+            .photo-gallery-wrap {
                 max-width: 100%;
                 aspect-ratio: 4/3;
             }
+            .photo-gallery-wrap .photo-item {
+                width: calc(33.33% - 6px);
+            }
         }
 
-        /* ── range slider untuk sensitivitas ── */
-        .sensitivity-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #334155;
-            outline: none;
-            transition: background 0.2s;
+        /* ── Scrollbar galeri ── */
+        .photo-gallery-wrap::-webkit-scrollbar {
+            width: 4px;
         }
-        .sensitivity-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
+        .photo-gallery-wrap::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+        .photo-gallery-wrap::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        /* ── Photo badge ── */
+        .photo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            padding: 2px 12px 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #c084fc;
+        }
+        .photo-badge .dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            border: 2px solid #60a5fa;
-            transition: 0.2s;
+            background: #a855f7;
+            display: inline-block;
+            animation: blink 1s ease-in-out infinite;
         }
-        .sensitivity-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
         }
-        .sensitivity-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            border: 2px solid #60a5fa;
+
+        /* ── hint gestur ── */
+        #gestureHint {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            color: #e2e8f0;
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.3px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #gestureHint.show {
+            opacity: 1;
+        }
+        #gestureHint .highlight {
+            color: #60a5fa;
+            font-weight: 700;
+        }
+        @media (max-width: 480px) {
+            #gestureHint {
+                font-size: 12px;
+                padding: 6px 14px;
+                bottom: 70px;
+                white-space: normal;
+            }
         }
     </style>
 </head>
 
 <body class="bg-slate-900 text-white font-sans antialiased min-h-screen flex items-center justify-center p-4 md:p-6">
 
-    <!-- ─── VIDEO KAMERA (untuk MediaPipe) ─── -->
-    <div class="hidden">
-        <video id="video" autoplay playsinline muted></video>
-    </div>
+    <!-- ─── VIDEO KAMERA (untuk MediaPipe, disembunyikan) ─── -->
+    <video id="video" autoplay playsinline muted style="display:none;"></video>
 
     <!-- ─── CURSOR ─── -->
     <div id="cursor"></div>
 
-    <!-- ─── INDICATOR GESTUR ─── -->
-    <div id="gestureIndicator">
-        <span class="icon"><i class="fa-regular fa-hand-peace"></i></span>
-        <span class="label">Gestur terdeteksi</span>
-    </div>
-
     <!-- ─── KONTEN UTAMA ─── -->
-    <div class="w-full max-w-5xl">
+    <div class="w-full max-w-6xl">
 
         <!-- ─── HEADER ─── -->
         <div class="text-center mb-6 md:mb-8">
@@ -228,48 +412,64 @@
                 Pilih salah satu mode di bawah ini untuk memulai petualanganmu
             </p>
 
-            <!-- Info frame + kontrol sensitivitas -->
+            <!-- Info frame + badge foto -->
             <div class="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-xs md:text-sm text-slate-300">
                     <i class="fa-regular fa-image text-blue-400"></i>
                     <span>Frame terpilih: <span id="frameLabel" class="font-semibold text-white">—</span></span>
                 </div>
-
-                <!-- Kontrol Sensitivitas -->
-                <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700">
-                    <i class="fa-solid fa-expand text-blue-400 text-xs"></i>
-                    <span class="text-xs text-slate-300">Tracking</span>
-                    <input type="range" id="sensitivitySlider" min="0.8" max="2.0" step="0.05" value="1.4"
-                    class="sensitivity-slider w-24 md:w-32" />
-                    <span id="sensitivityLabel" class="text-xs font-semibold text-blue-400 w-8">1.4x</span>
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-xs md:text-sm text-slate-300">
+                    <span class="photo-badge">
+                        <span class="dot"></span>
+                        <span id="photoCountBadge">0 foto</span>
+                    </span>
                 </div>
+                <button onclick="clearAllPhotos()" class="text-xs text-slate-400 hover:text-red-400 transition-colors">
+                    <i class="fa-regular fa-trash-can"></i> Hapus semua
+                </button>
             </div>
         </div>
 
-        <!-- ─── CAMERA PREVIEW ─── -->
-        <div class="flex justify-center mb-8">
-            <div class="camera-container">
+        <!-- ─── CAMERA + GALERI ─── -->
+        <div class="camera-gallery-wrap">
+
+            <!-- Kamera -->
+            <div class="camera-container" id="cameraContainer">
                 <video id="videoDisplay" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <canvas id="landmarkCanvas"></canvas>
                 <div id="frameOverlay"></div>
-                <!-- Label frame di atas video -->
+
+                <!-- Label frame -->
                 <div class="absolute top-3 left-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5 z-20">
                     <i class="fa-regular fa-image text-blue-400 text-[10px]"></i>
                     <span id="cameraFrameLabel">Frame 1</span>
                 </div>
-                <!-- Info sensitivitas di video -->
-                <div class="absolute bottom-3 right-3 badge-frame text-xs px-3 py-1 rounded-full text-white/80 border border-white/10 flex items-center gap-1.5 z-20">
-                    <i class="fa-solid fa-gauge-high text-blue-400 text-[10px]"></i>
-                    <span id="sensitivityDisplay">1.4x</span>
+
+                <!-- Legend landmark -->
+                <div id="landmarkLegend">
+                    <div class="row"><span class="dot" style="background:#ff6b6b;"></span> Landmark</div>
+                    <div class="row"><span class="dot" style="background:#ffd93d;"></span> Ujung jari</div>
+                    <div class="row"><span class="dot" style="background:#6bcbff;"></span> Skeleton</div>
                 </div>
-                <!-- Icon tangan watermark -->
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-5 opacity-20">
-                    <i class="fa-solid fa-hand-peace text-7xl text-white/30"></i>
+
+                <!-- Watermark -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-10">
+                    <i class="fa-solid fa-hand-peace text-7xl text-white/20"></i>
                 </div>
             </div>
+
+            <!-- Galeri Foto -->
+            <div class="photo-gallery-wrap" id="photoGallery">
+                <div class="empty-gallery">
+                    <i class="fa-regular fa-images"></i>
+                    <span>Belum ada foto. Ambil foto di halaman utama!</span>
+                </div>
+            </div>
+
         </div>
 
         <!-- ─── DUA CARD ─── -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-8">
 
             <!-- ─── CARD PUZZLE ─── -->
             <a href="virtual-puzzle-ai/index.html" class="card-game group relative block rounded-2xl overflow-hidden bg-slate-800/60 border border-slate-700/80 hover:border-blue-500/50 transition-all duration-300 card-enter shadow-xl hover:shadow-blue-500/10">
@@ -341,6 +541,11 @@
 
     </div>
 
+    <!-- ─── GESTURE HINT ─── -->
+    <div id="gestureHint">
+        ✋ <span class="highlight">cubit</span> = klik &nbsp;·&nbsp; ✌️ <span class="highlight">2 jari rapat</span> = gulir
+    </div>
+
     <script>
         // ================================================================
         // 1. BACA DATA FRAME DARI localStorage
@@ -348,32 +553,23 @@
 
         const STORAGE_KEY = "virtual_mouse_frames";
         const ACTIVE_KEY = "virtual_mouse_active_frame";
+        const PHOTOS_KEY = "virtual_mouse_photos"; // SAMA dengan index.html
 
         let frameDataURL = null;
         let frameIndex = 0;
+        let photos = [];
 
         try {
-
-            const frames = JSON.parse(
-                localStorage.getItem(STORAGE_KEY) || "[]"
-            );
-
-            frameIndex = parseInt(
-                localStorage.getItem(ACTIVE_KEY) || "0"
-            );
-
-            if (
-                frames.length > frameIndex &&
-                frames[frameIndex]
-            ){
+            const frames = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            frameIndex = parseInt(localStorage.getItem(ACTIVE_KEY) || "0");
+            if (frames.length > frameIndex && frames[frameIndex]) {
                 frameDataURL = frames[frameIndex];
             }
-
-        }catch(e){
+        } catch (e) {
             console.error(e);
         }
 
-        // Jika tidak ada frame tersimpan, gunakan default
+        // Jika tidak ada frame tersimpan, gunakan fallback
         if (!frameDataURL) {
             console.warn('⚠️ Tidak ada frame tersimpan, menggunakan fallback');
             const canvas = document.createElement('canvas');
@@ -475,80 +671,306 @@
         }
 
         // ================================================================
-        // 4. VIRTUAL MOUSE - GESTUR DIPERBAHARUI
-        //    - Klik = cubit (ibu jari + telunjuk)
-        //    - Scroll = 2 jari rapat (telunjuk + tengah) bergerak
+        // 4. FUNGSI FOTO (dengan sinkronisasi real-time)
+        // ================================================================
+
+        const photoGallery = document.getElementById('photoGallery');
+        const photoCountBadge = document.getElementById('photoCountBadge');
+
+        function savePhotos() {
+            try {
+                localStorage.setItem(PHOTOS_KEY, JSON.stringify(photos));
+            } catch (e) {
+                console.warn('Gagal menyimpan foto:', e);
+            }
+        }
+
+        function loadPhotos() {
+            try {
+                const saved = localStorage.getItem(PHOTOS_KEY);
+                if (saved) {
+                    photos = JSON.parse(saved);
+                    if (!Array.isArray(photos)) photos = [];
+                }
+            } catch (e) {
+                photos = [];
+            }
+            renderPhotos();
+        }
+
+        function renderPhotos() {
+            photoGallery.innerHTML = '';
+            if (photos.length === 0) {
+                photoGallery.innerHTML = `
+                    <div class="empty-gallery">
+                        <i class="fa-regular fa-images"></i>
+                        <span>Belum ada foto. Ambil foto di halaman utama!</span>
+                    </div>
+                `;
+            } else {
+                // Tampilkan foto terbaru di depan
+                const sorted = [...photos].reverse();
+                sorted.forEach((photo, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'photo-item';
+                    const img = document.createElement('img');
+                    img.src = photo.dataURL;
+                    img.alt = `Foto ${photo.id}`;
+                    div.appendChild(img);
+
+                    const index = document.createElement('span');
+                    index.className = 'photo-index';
+                    index.textContent = `#${photo.id}`;
+                    div.appendChild(index);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'delete-photo';
+                    delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                    delBtn.title = 'Hapus foto';
+                    delBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deletePhoto(photo.id);
+                    });
+                    div.appendChild(delBtn);
+
+                    photoGallery.appendChild(div);
+                });
+            }
+            updateBadge();
+        }
+
+        function deletePhoto(id) {
+            photos = photos.filter(p => p.id !== id);
+            savePhotos();
+            renderPhotos();
+        }
+
+        function clearAllPhotos() {
+            if (photos.length === 0) return;
+            if (confirm('Hapus semua foto?')) {
+                photos = [];
+                savePhotos();
+                renderPhotos();
+                showHint('🗑️ Semua foto dihapus', 800);
+            }
+        }
+
+        function updateBadge() {
+            const count = photos.length;
+            photoCountBadge.textContent = count === 0 ? '0 foto' : count === 1 ? '1 foto' : `${count} foto`;
+        }
+
+        // ── Sinkronisasi real-time: mendengarkan perubahan localStorage dari tab lain ──
+        window.addEventListener('storage', function(e) {
+            if (e.key === PHOTOS_KEY) {
+                console.log('🔄 Deteksi perubahan foto dari tab lain, reload...');
+                loadPhotos();
+            }
+        });
+
+        // ── Polling cadangan: cek setiap 2 detik (jika storage event tidak berfungsi) ──
+        let lastPhotoCount = 0;
+        setInterval(() => {
+            try {
+                const saved = localStorage.getItem(PHOTOS_KEY);
+                if (saved) {
+                    const newPhotos = JSON.parse(saved);
+                    if (Array.isArray(newPhotos) && newPhotos.length !== lastPhotoCount) {
+                        lastPhotoCount = newPhotos.length;
+                        loadPhotos();
+                    }
+                }
+            } catch (e) { /* skip */ }
+        }, 2000);
+
+        // ================================================================
+        // 5. VIRTUAL MOUSE + LANDMARK (tanpa foto)
         // ================================================================
 
         const cursor = document.getElementById('cursor');
         const videoEl = document.getElementById('video');
         const videoDisplay = document.getElementById('videoDisplay');
-        const gestureIndicator = document.getElementById('gestureIndicator');
-        const sensitivitySlider = document.getElementById('sensitivitySlider');
-        const sensitivityLabel = document.getElementById('sensitivityLabel');
-        const sensitivityDisplay = document.getElementById('sensitivityDisplay');
+        const landmarkCanvas = document.getElementById('landmarkCanvas');
+        const lctx = landmarkCanvas.getContext('2d');
 
         let camera = null;
         let clickCooldown = false;
         let filterCooldown = false;
-        let photoCooldown = false;
         let handsInstance = null;
         let prevScrollY = null;
         let scrollAccumulator = 0;
         const SCROLL_THRESHOLD = 30;
-        let sensitivity = 1.4;
+        const SENSITIVITY = 1.4;
 
-        // ── Update sensitivitas ──
-        function updateSensitivity() {
-            sensitivity = parseFloat(sensitivitySlider.value);
-            sensitivityLabel.textContent = sensitivity.toFixed(1) + 'x';
-            if (sensitivityDisplay) sensitivityDisplay.textContent = sensitivity.toFixed(1) + 'x';
-        }
-        sensitivitySlider.addEventListener('input', updateSensitivity);
-
-        // ── Indikator gestur ──
-        function showGesture(type, message) {
-            if (!gestureIndicator) return;
-            gestureIndicator.className = 'show';
-            const icon = gestureIndicator.querySelector('.icon');
-            const label = gestureIndicator.querySelector('.label');
-            if (type === 'click') {
-                gestureIndicator.classList.add('click');
-                icon.innerHTML = '<i class="fa-regular fa-hand-peace"></i>';
-                label.textContent = message || 'Klik!';
-            } else if (type === 'scroll-up') {
-                gestureIndicator.classList.add('scroll-up');
-                icon.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-                label.textContent = message || 'Scroll Atas';
-            } else if (type === 'scroll-down') {
-                gestureIndicator.classList.add('scroll-down');
-                icon.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
-                label.textContent = message || 'Scroll Bawah';
-            } else {
-                gestureIndicator.classList.remove('click', 'scroll-up', 'scroll-down');
-                icon.innerHTML = '<i class="fa-regular fa-hand-peace"></i>';
-                label.textContent = message || 'Gestur terdeteksi';
+        // ── Resize canvas landmark ──
+        function resizeLandmarkCanvas() {
+            const container = landmarkCanvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const w = rect.width;
+            const h = rect.height;
+            if (w > 0 && h > 0) {
+                landmarkCanvas.width = w * dpr;
+                landmarkCanvas.height = h * dpr;
+                landmarkCanvas.style.width = w + 'px';
+                landmarkCanvas.style.height = h + 'px';
+                lctx.scale(dpr, dpr);
+                landmarkCanvas._logicalWidth = w;
+                landmarkCanvas._logicalHeight = h;
             }
-            gestureIndicator.style.display = 'flex';
-            clearTimeout(gestureIndicator._hideTimer);
-            gestureIndicator._hideTimer = setTimeout(() => {
-                gestureIndicator.style.display = 'none';
-            }, 1200);
         }
 
-        // ── Mapping posisi tangan ke layar dengan sensitivitas ──
-        function mapHandToScreen(handX, handY, screenW, screenH, sens) {
+        // ── Gambar landmark tangan ──
+        function drawHandLandmarks(landmarks) {
+            const w = landmarkCanvas._logicalWidth || landmarkCanvas.width;
+            const h = landmarkCanvas._logicalHeight || landmarkCanvas.height;
+            if (!w || !h || !landmarks || landmarks.length === 0) {
+                lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
+                return;
+            }
+
+            lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
+
+            const mx = (x) => (1 - x) * w;
+            const my = (y) => y * h;
+
+            const connections = [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [0, 5],
+                [5, 6],
+                [6, 7],
+                [7, 8],
+                [0, 9],
+                [9, 10],
+                [10, 11],
+                [11, 12],
+                [0, 13],
+                [13, 14],
+                [14, 15],
+                [15, 16],
+                [0, 17],
+                [17, 18],
+                [18, 19],
+                [19, 20],
+                [5, 9],
+                [9, 13],
+                [13, 17]
+            ];
+
+            lctx.shadowColor = 'rgba(107, 203, 255, 0.35)';
+            lctx.shadowBlur = 10;
+            lctx.lineWidth = 2.8;
+            lctx.strokeStyle = '#6bcbff';
+            lctx.lineCap = 'round';
+
+            for (const [i, j] of connections) {
+                const p1 = landmarks[i];
+                const p2 = landmarks[j];
+                if (!p1 || !p2) continue;
+                const x1 = mx(p1.x);
+                const y1 = my(p1.y);
+                const x2 = mx(p2.x);
+                const y2 = my(p2.y);
+                lctx.beginPath();
+                lctx.moveTo(x1, y1);
+                lctx.lineTo(x2, y2);
+                lctx.stroke();
+            }
+
+            const fingerColors = [
+                '#ff6b6b',
+                '#ff9f43',
+                '#ffd93d',
+                '#6bcb6b',
+                '#6bcbff'
+            ];
+
+            lctx.shadowColor = 'rgba(255,255,255,0.25)';
+            lctx.shadowBlur = 12;
+
+            for (let i = 0; i < landmarks.length; i++) {
+                const lm = landmarks[i];
+                const x = mx(lm.x);
+                const y = my(lm.y);
+
+                let color = '#ff6b6b';
+                if (i >= 0 && i <= 4) color = fingerColors[0];
+                else if (i >= 5 && i <= 8) color = fingerColors[1];
+                else if (i >= 9 && i <= 12) color = fingerColors[2];
+                else if (i >= 13 && i <= 16) color = fingerColors[3];
+                else if (i >= 17 && i <= 20) color = fingerColors[4];
+
+                const isTip = [4, 8, 12, 16, 20].includes(i);
+                const radius = isTip ? 7 : 5;
+
+                lctx.shadowColor = color + '80';
+                lctx.shadowBlur = isTip ? 20 : 12;
+
+                lctx.beginPath();
+                lctx.arc(x, y, radius, 0, Math.PI * 2);
+                lctx.fillStyle = color;
+                lctx.fill();
+
+                lctx.shadowBlur = 0;
+                lctx.beginPath();
+                lctx.arc(x, y, isTip ? 3.5 : 2.5, 0, Math.PI * 2);
+                lctx.fillStyle = '#ffffff';
+                lctx.fill();
+
+                if (isTip) {
+                    const labels = ['IB', 'TJ', 'TG', 'MN', 'KL'];
+                    const idx = Math.floor(i / 4);
+                    lctx.shadowBlur = 0;
+                    lctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    lctx.font = 'bold 8px sans-serif';
+                    lctx.textAlign = 'center';
+                    lctx.textBaseline = 'bottom';
+                    lctx.fillText(labels[idx] || '', x, y - 10);
+                }
+            }
+
+            const wrist = landmarks[0];
+            if (wrist) {
+                const wx = mx(wrist.x);
+                const wy = my(wrist.y);
+                lctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+                lctx.shadowBlur = 18;
+                lctx.beginPath();
+                lctx.arc(wx, wy, 7, 0, Math.PI * 2);
+                lctx.fillStyle = '#ffd700';
+                lctx.fill();
+                lctx.shadowBlur = 0;
+                lctx.beginPath();
+                lctx.arc(wx, wy, 3, 0, Math.PI * 2);
+                lctx.fillStyle = '#fff';
+                lctx.fill();
+                lctx.fillStyle = 'rgba(255,215,0,0.7)';
+                lctx.font = '7px sans-serif';
+                lctx.textAlign = 'center';
+                lctx.textBaseline = 'bottom';
+                lctx.fillText('PG', wx, wy - 10);
+            }
+
+            lctx.shadowBlur = 0;
+            lctx.shadowColor = 'transparent';
+        }
+
+        // ── Mapping posisi tangan ──
+        function mapHandToScreen(handX, handY, screenW, screenH) {
             const offsetX = 0.05;
             const offsetY = 0.05;
             const scaleX = 1 / (1 - 2 * offsetX);
             const scaleY = 1 / (1 - 2 * offsetY);
 
-            let mappedX = (1 - handX - offsetX) * scaleX * sens;
-            mappedX = mappedX - (sens - 1) * 0.5;
+            let mappedX = (1 - handX - offsetX) * scaleX * SENSITIVITY;
+            mappedX = mappedX - (SENSITIVITY - 1) * 0.5;
             mappedX = Math.max(0, Math.min(1, mappedX));
 
-            let mappedY = (handY - offsetY) * scaleY * sens;
-            mappedY = mappedY - (sens - 1) * 0.5;
+            let mappedY = (handY - offsetY) * scaleY * SENSITIVITY;
+            mappedY = mappedY - (SENSITIVITY - 1) * 0.5;
             mappedY = Math.max(0, Math.min(1, mappedY));
 
             return { x: mappedX * screenW, y: mappedY * screenH };
@@ -576,114 +998,107 @@
                 });
 
                 handsInstance.onResults(function(results) {
-                    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-                        if (gestureIndicator) gestureIndicator.style.display = 'none';
-                        return;
-                    }
+                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                        const hand = results.multiHandLandmarks[0];
+                        drawHandLandmarks(hand);
 
-                    const hand = results.multiHandLandmarks[0];
-                    const indexFinger = hand[8];
-                    const thumbTip = hand[4];
-                    const middleTip = hand[12];
+                        const indexFinger = hand[8];
+                        const thumbTip = hand[4];
+                        const middleTip = hand[12];
 
-                    // ── Posisi kursor ──
-                    const pos = mapHandToScreen(
-                        indexFinger.x,
-                        indexFinger.y,
-                        window.innerWidth,
-                        window.innerHeight,
-                        sensitivity
-                    );
-                    if (cursor) {
-                        cursor.style.display = 'block';
-                        cursor.style.left = pos.x + 'px';
-                        cursor.style.top = pos.y + 'px';
-                    }
-
-                    // ── Hitung jari terangkat ──
-                    let fingerCount = 0;
-                    if (hand[8].y < hand[6].y) fingerCount++;
-                    if (hand[12].y < hand[10].y) fingerCount++;
-                    if (hand[16].y < hand[14].y) fingerCount++;
-                    if (hand[20].y < hand[18].y) fingerCount++;
-                    if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
-
-                    // ── Jarak pinch (ibu jari - telunjuk) ──
-                    const pinchDist = Math.hypot(
-                        thumbTip.x - indexFinger.x,
-                        thumbTip.y - indexFinger.y,
-                        thumbTip.z - indexFinger.z
-                    );
-                    const isPinch = pinchDist < 0.04;
-
-                    // ── Jarak 2 jari rapat (telunjuk - tengah) ──
-                    const twoFingerDist = Math.hypot(
-                        indexFinger.x - middleTip.x,
-                        indexFinger.y - middleTip.y,
-                        indexFinger.z - middleTip.z
-                    );
-                    const isTwoTogether = twoFingerDist < 0.06;
-
-                    // ── GESTUR KLIK (pinch) ──
-                    if (isPinch && !clickCooldown) {
-                        clickCooldown = true;
-                        const element = document.elementFromPoint(pos.x, pos.y);
-                        if (element && element !== cursor) {
-                            element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                            showGesture('click', 'Klik!');
-                            // efek cursor
-                            cursor.style.background = '#4ade80';
-                            cursor.style.boxShadow = '0 0 30px #4ade80';
-                            setTimeout(() => {
-                                cursor.style.background = 'red';
-                                cursor.style.boxShadow = '0 0 20px red';
-                            }, 200);
-                        } else {
-                            showGesture('click', 'Klik');
+                        const pos = mapHandToScreen(
+                            indexFinger.x,
+                            indexFinger.y,
+                            window.innerWidth,
+                            window.innerHeight
+                        );
+                        if (cursor) {
+                            cursor.style.display = 'block';
+                            cursor.style.left = pos.x + 'px';
+                            cursor.style.top = pos.y + 'px';
                         }
-                        setTimeout(() => { clickCooldown = false; }, 600);
-                    }
 
-                    // ── GESTUR SCROLL (2 jari rapat, bukan pinch) ──
-                    if (isTwoTogether && !isPinch) {
-                        const currentY = indexFinger.y;
-                        if (prevScrollY !== null) {
-                            const deltaY = currentY - prevScrollY;
-                            scrollAccumulator += deltaY * window.innerHeight * sensitivity;
-                            if (Math.abs(scrollAccumulator) > SCROLL_THRESHOLD) {
-                                const direction = scrollAccumulator > 0 ? 'down' : 'up';
-                                const scrollAmount = Math.abs(scrollAccumulator);
-                                if (direction === 'down') {
-                                    window.scrollBy(0, scrollAmount);
-                                    showGesture('scroll-down', 'Scroll Bawah');
-                                } else {
-                                    window.scrollBy(0, -scrollAmount);
-                                    showGesture('scroll-up', 'Scroll Atas');
-                                }
-                                scrollAccumulator = 0;
+                        let fingerCount = 0;
+                        if (hand[8].y < hand[6].y) fingerCount++;
+                        if (hand[12].y < hand[10].y) fingerCount++;
+                        if (hand[16].y < hand[14].y) fingerCount++;
+                        if (hand[20].y < hand[18].y) fingerCount++;
+                        if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
+
+                        const pinchDist = Math.hypot(
+                            thumbTip.x - indexFinger.x,
+                            thumbTip.y - indexFinger.y,
+                            thumbTip.z - indexFinger.z
+                        );
+                        const isPinch = pinchDist < 0.04;
+
+                        const twoFingerDist = Math.hypot(
+                            indexFinger.x - middleTip.x,
+                            indexFinger.y - middleTip.y,
+                            indexFinger.z - middleTip.z
+                        );
+                        const isTwoTogether = twoFingerDist < 0.06;
+
+                        // ── KLIK ──
+                        if (isPinch && !clickCooldown) {
+                            clickCooldown = true;
+                            cursor.classList.add('clicking');
+                            const element = document.elementFromPoint(pos.x, pos.y);
+                            if (element && element !== cursor) {
+                                element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
                             }
+                            setTimeout(() => {
+                                cursor.classList.remove('clicking');
+                                clickCooldown = false;
+                            }, 500);
                         }
-                        prevScrollY = currentY;
+
+                        // ── SCROLL ──
+                        if (isTwoTogether && !isPinch) {
+                            const currentY = indexFinger.y;
+                            if (prevScrollY !== null) {
+                                const deltaY = currentY - prevScrollY;
+                                scrollAccumulator += deltaY * window.innerHeight * SENSITIVITY;
+                                if (Math.abs(scrollAccumulator) > SCROLL_THRESHOLD) {
+                                    const direction = scrollAccumulator > 0 ? 'down' : 'up';
+                                    const scrollAmount = Math.abs(scrollAccumulator);
+                                    cursor.classList.add('scrolling');
+                                    if (direction === 'down') {
+                                        window.scrollBy(0, scrollAmount);
+                                    } else {
+                                        window.scrollBy(0, -scrollAmount);
+                                    }
+                                    scrollAccumulator = 0;
+                                    setTimeout(() => {
+                                        cursor.classList.remove('scrolling');
+                                    }, 300);
+                                }
+                            }
+                            prevScrollY = currentY;
+                        } else {
+                            prevScrollY = null;
+                            scrollAccumulator = 0;
+                            cursor.classList.remove('scrolling');
+                        }
+
+                        // ── 4 jari = ganti hewan (hanya notifikasi) ──
+                        if (fingerCount === 4 && !filterCooldown) {
+                            filterCooldown = true;
+                            showHint('🐾 Ganti hewan (di halaman Hewan)', 1000);
+                            if (typeof window.nextAnimal === 'function') {
+                                window.nextAnimal();
+                            }
+                            setTimeout(() => { filterCooldown = false; }, 1500);
+                        }
+
+                        // ── 5 JARI DIHAPUS (tidak ada aksi) ──
+
                     } else {
+                        lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
+                        if (cursor) cursor.style.display = 'none';
                         prevScrollY = null;
                         scrollAccumulator = 0;
-                        if (gestureIndicator) gestureIndicator.style.display = 'none';
-                    }
-
-                    // ── 4 jari = ganti hewan ──
-                    if (fingerCount === 4 && typeof window.nextAnimal === 'function' && !filterCooldown) {
-                        filterCooldown = true;
-                        window.nextAnimal();
-                        showGesture('click', 'Ganti Hewan');
-                        setTimeout(() => { filterCooldown = false; }, 1500);
-                    }
-
-                    // ── 5 jari = foto ──
-                    if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
-                        photoCooldown = true;
-                        window.startCountdown();
-                        showGesture('click', 'Foto!');
-                        setTimeout(() => { photoCooldown = false; }, 7000);
+                        cursor.classList.remove('scrolling', 'clicking');
                     }
                 });
 
@@ -713,22 +1128,68 @@
                         }
                     });
 
-                console.log('✅ Virtual Mouse aktif — Klik: cubit (jempol+telunjuk) | Scroll: 2 jari rapat (telunjuk+tengah)');
+                setTimeout(() => {
+                    resizeLandmarkCanvas();
+                }, 400);
+
+                if (window.ResizeObserver) {
+                    const ro = new ResizeObserver(() => { resizeLandmarkCanvas(); });
+                    ro.observe(landmarkCanvas.parentElement);
+                }
+                window.addEventListener('resize', resizeLandmarkCanvas);
+
+                console.log('✅ Virtual Mouse + Landmark aktif (tanpa fitur foto)');
+                console.log('📌 Gestur: cubit=klik, 2 jari rapat=gulir');
 
             } catch (err) {
                 console.error('Gagal inisialisasi MediaPipe:', err);
             }
         }
 
-        // ── Inisialisasi saat halaman dimuat ──
+        // ================================================================
+        // 6. GESTURE HINT
+        // ================================================================
+
+        let hintTimeout = null;
+
+        function showHint(text, duration = 1200) {
+            const hint = document.getElementById('gestureHint');
+            if (!hint) return;
+            hint.textContent = text;
+            hint.classList.add('show');
+            clearTimeout(hintTimeout);
+            hintTimeout = setTimeout(() => {
+                hint.classList.remove('show');
+            }, duration);
+        }
+
+        // ================================================================
+        // 7. INISIALISASI
+        // ================================================================
+
         document.addEventListener('DOMContentLoaded', function() {
+            loadPhotos(); // Memuat foto dari localStorage
             initHands();
             if (cursor) cursor.style.display = 'block';
-            updateSensitivity();
+            setTimeout(resizeLandmarkCanvas, 300);
+
+            setTimeout(() => {
+                showHint('✋ cubit = klik  ·  ✌️ 2 jari rapat = gulir', 3000);
+            }, 1500);
         });
 
         window.addEventListener('resize', function() {});
-        console.log('📦 Option page — gestur diperbarui: pinch=klik, dua jari rapat=scroll');
+
+        // Ekspose fungsi untuk kompatibilitas
+        window.nextAnimal = function() {
+            console.log('🔄 Next animal (dari option)');
+            showHint('🐾 Ganti hewan (di halaman Hewan)', 1000);
+        };
+        window.clearAllPhotos = clearAllPhotos;
+
+        console.log('📦 Option page — foto dari index.html muncul di samping video dengan ukuran sama');
+        console.log('🗑️ Gestur 5 jari untuk foto telah dihapus.');
+        console.log('🔄 Sinkronisasi real-time aktif — foto akan langsung muncul jika diambil di tab lain.');
     </script>
 
 </body>

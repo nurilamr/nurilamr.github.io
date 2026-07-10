@@ -69,6 +69,18 @@
             pointer-events: none;
         }
 
+        /* ── Canvas Landmark (di atas video, di bawah frame) ── */
+        #landmarkCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            border-radius: 15px;
+            display: block;
+        }
+
         /* ── Video mirror ── */
         #video {
             transform: scaleX(-1);
@@ -457,8 +469,37 @@
         .legend-dot.three {
             background: #eab308;
         }
-        .legend-dot.five {
-            background: #a855f7;
+
+        /* ── Legend Landmark ── */
+        #landmarkLegend {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 6;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 9px;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            line-height: 1.4;
+        }
+        #landmarkLegend .row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #landmarkLegend .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -498,7 +539,6 @@
                         <span class="legend-item"><span class="legend-dot pinch"></span> cubit = klik</span>
                         <span class="legend-item"><span class="legend-dot scroll"></span> 2 rapat = scroll</span>
                         <span class="legend-item"><span class="legend-dot three"></span> 3 jari = next</span>
-                        <span class="legend-item"><span class="legend-dot five"></span> 5 jari = foto</span>
                     </div>
                 </div>
 
@@ -515,7 +555,16 @@
             <div class="bg-slate-800 rounded-2xl shadow-2xl p-4 mb-6">
                 <div class="relative w-full max-w-[640px] mx-auto rounded-xl overflow-hidden bg-black">
                     <video id="video" autoplay playsinline muted class="w-full h-auto aspect-video block object-cover"></video>
+                    <canvas id="landmarkCanvas"></canvas>
                     <div id="frameOverlay"></div>
+
+                    <!-- Legend Landmark -->
+                    <div id="landmarkLegend">
+                        <div class="row"><span class="dot" style="background:#ff6b6b;"></span> Landmark</div>
+                        <div class="row"><span class="dot" style="background:#ffd93d;"></span> Ujung jari</div>
+                        <div class="row"><span class="dot" style="background:#6bcbff;"></span> Skeleton</div>
+                    </div>
+
                     <!-- Overlay gestur kecil -->
                     <div class="absolute bottom-3 left-3 flex gap-1.5 z-20">
                         <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
@@ -571,7 +620,6 @@
                 <span>🤏 cubit = klik</span>
                 <span>✌️ 2 rapat = scroll</span>
                 <span>🖐️ 3 = next</span>
-                <span>🖐️ 5 = foto</span>
             </div>
         </div>
     </div>
@@ -848,7 +896,7 @@
         window.nextAnimal = nextAnimal;
 
         // ================================================================
-        // 4. DEKLARASI GLOBAL VIRTUAL MOUSE
+        // 4. DEKLARASI GLOBAL VIRTUAL MOUSE & LANDMARK
         // ================================================================
 
         const cursor = document.getElementById('cursor');
@@ -858,11 +906,12 @@
         const gestureIndicator = document.getElementById('gestureIndicator');
         const gestureIcon = document.getElementById('gestureIcon');
         const gestureText = document.getElementById('gestureText');
+        const landmarkCanvas = document.getElementById('landmarkCanvas');
+        const lctx = landmarkCanvas.getContext('2d');
 
         let camera = null;
         let clickCooldown = false;
         let filterCooldown = false;
-        let photoCooldown = false;
         let isVirtualMouseActive = true;
         let handsInstance = null;
 
@@ -985,7 +1034,7 @@
             let savedFrames = [];
             let activeIndex = 0;
 
-            try{
+            try {
                 savedFrames = JSON.parse(
                     localStorage.getItem(STORAGE_KEY) || "[]"
                 );
@@ -994,11 +1043,11 @@
                     localStorage.getItem(ACTIVE_KEY) || "0"
                 );
 
-            }catch(e){
+            } catch (e) {
                 console.error(e);
             }
 
-            for(let i=0;i<5;i++){
+            for (let i = 0; i < 5; i++) {
 
                 const dataURL =
                     savedFrames[i] ||
@@ -1006,7 +1055,7 @@
 
                 frameData.push({
                     dataURL,
-                    file:null
+                    file: null
                 });
                 const slot = document.createElement('div');
                 slot.className =
@@ -1075,11 +1124,11 @@
             if (slots[index]) {
                 slots[index].classList.add('active');
                 activeFrameIndex = index;
-                localStorage.setItem(ACTIVE_KEY,index);
+                localStorage.setItem(ACTIVE_KEY, index);
                 localStorage.setItem(
                     STORAGE_KEY,
                     JSON.stringify(
-                        frameData.map(f=>f.dataURL)
+                        frameData.map(f => f.dataURL)
                     )
                 );
                 const data = frameData[index]?.dataURL;
@@ -1127,9 +1176,6 @@
             } else if (mode === 'three') {
                 icon.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
                 txt.textContent = text || '🖐️ 3 jari: next hewan';
-            } else if (mode === 'five') {
-                icon.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                txt.textContent = text || '🖐️ 5 jari: foto!';
             } else {
                 icon.innerHTML = '<i class="fa-regular fa-hand"></i>';
                 txt.textContent = text || 'Gestur terdeteksi';
@@ -1156,8 +1202,172 @@
         }
 
         // ================================================================
-        // 7. VIRTUAL MOUSE - MEDIAPIPE HANDS
-        //    GESTUR: cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto
+        // 7. FUNGSI MENGGAMBAR LANDMARK TANGAN
+        // ================================================================
+
+        function resizeLandmarkCanvas() {
+            const container = landmarkCanvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const w = rect.width;
+            const h = rect.height;
+            if (w > 0 && h > 0) {
+                landmarkCanvas.width = w * dpr;
+                landmarkCanvas.height = h * dpr;
+                landmarkCanvas.style.width = w + 'px';
+                landmarkCanvas.style.height = h + 'px';
+                lctx.scale(dpr, dpr);
+                landmarkCanvas._logicalWidth = w;
+                landmarkCanvas._logicalHeight = h;
+            }
+        }
+
+        function drawHandLandmarks(landmarks) {
+            const w = landmarkCanvas._logicalWidth || landmarkCanvas.width;
+            const h = landmarkCanvas._logicalHeight || landmarkCanvas.height;
+            if (!w || !h || !landmarks || landmarks.length === 0) {
+                lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
+                return;
+            }
+
+            lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
+
+            // Fungsi mirror x (karena video di-scaleX(-1))
+            const mx = (x) => (1 - x) * w;
+            const my = (y) => y * h;
+
+            // ── Connections (skeleton) ──
+            const connections = [
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [0, 5],
+                [5, 6],
+                [6, 7],
+                [7, 8],
+                [0, 9],
+                [9, 10],
+                [10, 11],
+                [11, 12],
+                [0, 13],
+                [13, 14],
+                [14, 15],
+                [15, 16],
+                [0, 17],
+                [17, 18],
+                [18, 19],
+                [19, 20],
+                [5, 9],
+                [9, 13],
+                [13, 17]
+            ];
+
+            // Gambar skeleton dengan glow
+            lctx.shadowColor = 'rgba(107, 203, 255, 0.35)';
+            lctx.shadowBlur = 10;
+            lctx.lineWidth = 2.8;
+            lctx.strokeStyle = '#6bcbff';
+            lctx.lineCap = 'round';
+
+            for (const [i, j] of connections) {
+                const p1 = landmarks[i];
+                const p2 = landmarks[j];
+                if (!p1 || !p2) continue;
+                const x1 = mx(p1.x);
+                const y1 = my(p1.y);
+                const x2 = mx(p2.x);
+                const y2 = my(p2.y);
+                lctx.beginPath();
+                lctx.moveTo(x1, y1);
+                lctx.lineTo(x2, y2);
+                lctx.stroke();
+            }
+
+            // ── Landmark points ──
+            const fingerColors = [
+                '#ff6b6b', // 0-4: ibu jari
+                '#ff9f43', // 5-8: telunjuk
+                '#ffd93d', // 9-12: tengah
+                '#6bcb6b', // 13-16: manis
+                '#6bcbff', // 17-20: kelingking
+            ];
+
+            lctx.shadowColor = 'rgba(255,255,255,0.25)';
+            lctx.shadowBlur = 12;
+
+            for (let i = 0; i < landmarks.length; i++) {
+                const lm = landmarks[i];
+                const x = mx(lm.x);
+                const y = my(lm.y);
+
+                let color = '#ff6b6b';
+                if (i >= 0 && i <= 4) color = fingerColors[0];
+                else if (i >= 5 && i <= 8) color = fingerColors[1];
+                else if (i >= 9 && i <= 12) color = fingerColors[2];
+                else if (i >= 13 && i <= 16) color = fingerColors[3];
+                else if (i >= 17 && i <= 20) color = fingerColors[4];
+
+                const isTip = [4, 8, 12, 16, 20].includes(i);
+                const radius = isTip ? 7 : 5;
+
+                lctx.shadowColor = color + '80';
+                lctx.shadowBlur = isTip ? 20 : 12;
+
+                lctx.beginPath();
+                lctx.arc(x, y, radius, 0, Math.PI * 2);
+                lctx.fillStyle = color;
+                lctx.fill();
+
+                lctx.shadowBlur = 0;
+                lctx.beginPath();
+                lctx.arc(x, y, isTip ? 3.5 : 2.5, 0, Math.PI * 2);
+                lctx.fillStyle = '#ffffff';
+                lctx.fill();
+
+                // Label ujung jari
+                if (isTip) {
+                    const labels = ['IB', 'TJ', 'TG', 'MN', 'KL'];
+                    const idx = Math.floor(i / 4);
+                    lctx.shadowBlur = 0;
+                    lctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    lctx.font = 'bold 8px sans-serif';
+                    lctx.textAlign = 'center';
+                    lctx.textBaseline = 'bottom';
+                    lctx.fillText(labels[idx] || '', x, y - 10);
+                }
+            }
+
+            // ── Pergelangan tangan (0) dengan highlight ──
+            const wrist = landmarks[0];
+            if (wrist) {
+                const wx = mx(wrist.x);
+                const wy = my(wrist.y);
+                lctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+                lctx.shadowBlur = 18;
+                lctx.beginPath();
+                lctx.arc(wx, wy, 7, 0, Math.PI * 2);
+                lctx.fillStyle = '#ffd700';
+                lctx.fill();
+                lctx.shadowBlur = 0;
+                lctx.beginPath();
+                lctx.arc(wx, wy, 3, 0, Math.PI * 2);
+                lctx.fillStyle = '#fff';
+                lctx.fill();
+                lctx.fillStyle = 'rgba(255,215,0,0.7)';
+                lctx.font = '7px sans-serif';
+                lctx.textAlign = 'center';
+                lctx.textBaseline = 'bottom';
+                lctx.fillText('PG', wx, wy - 10);
+            }
+
+            lctx.shadowBlur = 0;
+            lctx.shadowColor = 'transparent';
+        }
+
+        // ================================================================
+        // 8. VIRTUAL MOUSE - MEDIAPIPE HANDS + LANDMARK
+        //    GESTUR: cubit=klik, 2 rapat=scroll, 3=next animal (5 dihapus)
         // ================================================================
 
         function initVirtualMouse() {
@@ -1176,13 +1386,19 @@
                 });
 
                 handsInstance.onResults(function(results) {
-                    if (!isVirtualMouseActive) {
+                    // ── Gambar landmark di canvas ──
+                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                        const hand = results.multiHandLandmarks[0];
+                        drawHandLandmarks(hand);
+                    } else {
+                        // Tidak ada tangan: bersihkan canvas
+                        lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
                         if (cursor) cursor.style.display = 'none';
                         hideGesture();
                         return;
                     }
 
-                    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+                    if (!isVirtualMouseActive) {
                         if (cursor) cursor.style.display = 'none';
                         hideGesture();
                         return;
@@ -1287,7 +1503,7 @@
                             }
                         }
 
-                        // ── 3 jari: NEXT ANIMAL (sebelumnya 4 jari) ──
+                        // ── 3 jari: NEXT ANIMAL ──
                         if (fingerCount === 3 && typeof window.nextAnimal === 'function' && !filterCooldown) {
                             filterCooldown = true;
                             if (cursor) {
@@ -1305,20 +1521,13 @@
                             }, 1500);
                         }
 
-                        // ── 5 jari: take photo ──
-                        if (fingerCount >= 5 && typeof window.startCountdown === 'function' && !photoCooldown) {
-                            photoCooldown = true;
-                            showGesture('five', '🖐️ 5 jari: foto!');
-                            window.startCountdown();
-                            setTimeout(() => { photoCooldown = false; }, 7000);
-                        }
-
                         // ── 1 jari: idle (cursor bergerak) ──
                         if (fingerCount === 1) {
                             showGesture('idle', '👆 1 jari: gerak kursor');
                         } else if (fingerCount === 0) {
                             // tidak ada tangan terbuka
                         }
+                        // 5 jari DIHAPUS (tidak ada aksi)
                     }
                 });
 
@@ -1330,7 +1539,7 @@
                     height: 480
                 });
                 camera.start();
-                console.log('✅ Virtual Mouse aktif — cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto');
+                console.log('✅ Virtual Mouse aktif — cubit=klik, 2 rapat=scroll, 3=next animal');
 
             } catch (err) {
                 console.error('Gagal inisialisasi MediaPipe:', err);
@@ -1338,7 +1547,7 @@
         }
 
         // ================================================================
-        // 8. KAMERA DISPLAY
+        // 9. KAMERA DISPLAY
         // ================================================================
 
         function startCameraDisplay() {
@@ -1352,7 +1561,7 @@
         }
 
         // ================================================================
-        // 9. INISIALISASI
+        // 10. INISIALISASI
         // ================================================================
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1360,9 +1569,22 @@
             initFrameSlots();
             startCameraDisplay();
             initVirtualMouse();
+
+            // Resize canvas landmark
+            setTimeout(() => {
+                resizeLandmarkCanvas();
+            }, 500);
+
+            if (window.ResizeObserver) {
+                const ro = new ResizeObserver(() => { resizeLandmarkCanvas(); });
+                ro.observe(landmarkCanvas.parentElement);
+            }
+            window.addEventListener('resize', resizeLandmarkCanvas);
+
             if (cursor) cursor.style.display = 'block';
-            console.log('🐾 Hewan.html siap — cubit=klik, 2 rapat=scroll, 3=next animal, 5=foto');
+            console.log('🐾 Hewan.html siap — cubit=klik, 2 rapat=scroll, 3=next animal');
             console.log('📁 Pastikan file gambar ada di folder ./assets/animals/');
+            console.log('🗑️ Gestur 5 jari untuk foto telah dihapus.');
         });
 
         window.addEventListener('resize', function() {});
@@ -1382,8 +1604,6 @@
                 console.log('Virtual Mouse: NONAKTIF');
             }
         };
-
-        console.log('✅ Hewan.html — cubit=klik | 2 rapat=scroll | 3 jari=next animal | 5=foto');
     </script>
 
 </body>
