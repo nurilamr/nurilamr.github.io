@@ -69,7 +69,7 @@
             pointer-events: none;
         }
 
-        /* ── Canvas Landmark (di atas video, di bawah frame) ── */
+        /* ── Canvas Landmark ── */
         #landmarkCanvas {
             position: absolute;
             inset: 0;
@@ -501,6 +501,126 @@
             display: inline-block;
             flex-shrink: 0;
         }
+
+        /* ── Container video + foto ── */
+        .video-photo-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) {
+            .video-photo-wrapper {
+                flex-direction: row;
+                align-items: stretch;
+            }
+        }
+
+        .video-container {
+            position: relative;
+            flex: 1;
+            aspect-ratio: 16 / 9;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0a0a0a;
+            border: 2px solid #334155;
+            min-width: 0;
+        }
+        .video-container video,
+        .video-container canvas,
+        .video-container #frameOverlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .video-container video {
+            object-fit: cover;
+        }
+        .video-container #landmarkCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .photo-container {
+            flex: 1;
+            aspect-ratio: 16 / 9;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 2px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-width: 0;
+        }
+        .photo-container .empty-photo {
+            text-align: center;
+            color: #475569;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+        }
+        .photo-container .empty-photo i {
+            font-size: 32px;
+            color: #334155;
+        }
+        .photo-container .empty-photo span {
+            font-size: 13px;
+        }
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .photo-container .photo-badge-overlay {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .photo-container .photo-badge-overlay .del-btn {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: 0.2s;
+        }
+        .photo-container .photo-badge-overlay .del-btn:hover {
+            background: #ef4444;
+            transform: scale(1.1);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .video-container,
+            .photo-container {
+                aspect-ratio: 16 / 9;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -548,34 +668,52 @@
             </div>
         </div>
 
-        <!-- ─── KANAN: KAMERA + GRID HEWAN ─── -->
+        <!-- ─── KANAN: VIDEO + FOTO + GRID HEWAN ─── -->
         <div class="flex-1 w-full max-w-3xl">
 
-            <!-- Camera Box -->
+            <!-- Camera Box dengan Video dan Foto -->
             <div class="bg-slate-800 rounded-2xl shadow-2xl p-4 mb-6">
-                <div class="relative w-full max-w-[640px] mx-auto rounded-xl overflow-hidden bg-black">
-                    <video id="video" autoplay playsinline muted class="w-full h-auto aspect-video block object-cover"></video>
-                    <canvas id="landmarkCanvas"></canvas>
-                    <div id="frameOverlay"></div>
+                <div class="video-photo-wrapper">
+                    <!-- Video -->
+                    <div class="video-container">
+                        <video id="video" autoplay playsinline muted></video>
+                        <canvas id="landmarkCanvas"></canvas>
+                        <div id="frameOverlay"></div>
 
-                    <!-- Legend Landmark -->
-                    <div id="landmarkLegend">
-                        <div class="row"><span class="dot" style="background:#ff6b6b;"></span> Landmark</div>
-                        <div class="row"><span class="dot" style="background:#ffd93d;"></span> Ujung jari</div>
-                        <div class="row"><span class="dot" style="background:#6bcbff;"></span> Skeleton</div>
+                        <!-- Legend Landmark -->
+                        <div id="landmarkLegend">
+                            <div class="row"><span class="dot" style="background:#ff6b6b;"></span> Landmark</div>
+                            <div class="row"><span class="dot" style="background:#ffd93d;"></span> Ujung jari</div>
+                            <div class="row"><span class="dot" style="background:#6bcbff;"></span> Skeleton</div>
+                        </div>
+
+                        <!-- Overlay gestur kecil -->
+                        <div class="absolute bottom-3 left-3 flex gap-1.5 z-20">
+                            <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                                <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> cubit
+                            </span>
+                            <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> 2 rapat
+                            </span>
+                            <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
+                                <span class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span> 3 = next
+                            </span>
+                        </div>
                     </div>
 
-                    <!-- Overlay gestur kecil -->
-                    <div class="absolute bottom-3 left-3 flex gap-1.5 z-20">
-                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
-                            <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> cubit
-                        </span>
-                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> 2 rapat
-                        </span>
-                        <span class="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1.5 border border-white/10">
-                            <span class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span> 3 = next
-                        </span>
+                    <!-- Foto -->
+                    <div class="photo-container" id="photoContainer">
+                        <div class="empty-photo" id="photoPlaceholder">
+                            <i class="fa-regular fa-image"></i>
+                            <span>Belum ada foto</span>
+                        </div>
+                        <img id="photoDisplay" class="hidden w-full h-full object-cover" alt="Foto" />
+                        <div id="photoBadge" class="photo-badge-overlay hidden">
+                            <span id="photoIdLabel">#0</span>
+                            <button class="del-btn" id="deletePhotoBtn" title="Hapus foto ini">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -590,7 +728,7 @@
                 </div>
             </div>
 
-            <!-- ─── GRID HEWAN (10 kartu dengan gambar lokal) ─── -->
+            <!-- ─── GRID HEWAN ─── -->
             <div class="bg-slate-800 rounded-2xl shadow-2xl p-5 md:p-6">
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-list text-emerald-400"></i>
@@ -653,7 +791,7 @@
 
     <script>
         // ================================================================
-        // 1. DATA HEWAN (10 hewan dengan gambar lokal)
+        // 1. DATA HEWAN
         // ================================================================
 
         const animals = [{
@@ -769,7 +907,7 @@
         }];
 
         // ================================================================
-        // 2. RENDER GRID HEWAN dengan GAMBAR LOKAL
+        // 2. RENDER GRID HEWAN
         // ================================================================
 
         const animalGrid = document.getElementById('animalGrid');
@@ -822,7 +960,7 @@
         }
 
         // ================================================================
-        // 3. MODAL dengan GAMBAR LOKAL
+        // 3. MODAL
         // ================================================================
 
         const modalOverlay = document.getElementById('modalOverlay');
@@ -872,16 +1010,14 @@
             }
         });
 
-        // ── NEXT ANIMAL (untuk gestur 3 jari) ──
+        // ── NEXT ANIMAL ──
         function nextAnimal() {
             currentAnimalIndex = (currentAnimalIndex + 1) % animals.length;
             const animal = animals[currentAnimalIndex];
             openModal(animal);
-            // Scroll ke kartu yang aktif
             const cards = document.querySelectorAll('.animal-card');
             if (cards[currentAnimalIndex]) {
                 cards[currentAnimalIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Efek highlight sementara
                 cards[currentAnimalIndex].style.borderColor = '#eab308';
                 cards[currentAnimalIndex].style.boxShadow = '0 0 30px rgba(234, 179, 8, 0.4)';
                 setTimeout(() => {
@@ -892,52 +1028,98 @@
             console.log(`🔄 Next animal: ${animal.name} (${currentAnimalIndex + 1}/${animals.length})`);
         }
 
-        // Expose ke window agar bisa dipanggil dari gesture
         window.nextAnimal = nextAnimal;
 
         // ================================================================
-        // 4. DEKLARASI GLOBAL VIRTUAL MOUSE & LANDMARK
+        // 4. FOTO - SINKRONISASI DENGAN INDEX.HTML
         // ================================================================
 
-        const cursor = document.getElementById('cursor');
-        const video = document.getElementById('video');
+        const PHOTOS_KEY = 'virtual_mouse_photos';
+        const photoContainer = document.getElementById('photoContainer');
+        const photoPlaceholder = document.getElementById('photoPlaceholder');
+        const photoDisplay = document.getElementById('photoDisplay');
+        const photoBadge = document.getElementById('photoBadge');
+        const photoIdLabel = document.getElementById('photoIdLabel');
+        const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+
+        let photos = [];
+
+        function loadPhoto() {
+            try {
+                const saved = localStorage.getItem(PHOTOS_KEY);
+                if (saved) {
+                    photos = JSON.parse(saved);
+                    if (!Array.isArray(photos)) photos = [];
+                } else {
+                    photos = [];
+                }
+            } catch (e) {
+                photos = [];
+            }
+
+            if (photos.length === 0) {
+                photoPlaceholder.classList.remove('hidden');
+                photoDisplay.classList.add('hidden');
+                photoBadge.classList.add('hidden');
+                return;
+            }
+
+            const latest = photos[photos.length - 1];
+            photoDisplay.src = latest.dataURL;
+            photoDisplay.classList.remove('hidden');
+            photoPlaceholder.classList.add('hidden');
+            photoBadge.classList.remove('hidden');
+            photoIdLabel.textContent = `#${latest.id}`;
+        }
+
+        function deleteLatestPhoto() {
+            if (photos.length === 0) return;
+            photos.pop();
+            try {
+                localStorage.setItem(PHOTOS_KEY, JSON.stringify(photos));
+            } catch (e) { /* ignore */ }
+            loadPhoto();
+            showHint('🗑️ Foto terbaru dihapus', 800);
+        }
+
+        deletePhotoBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            deleteLatestPhoto();
+        });
+
+        // Sinkronisasi real-time
+        window.addEventListener('storage', function(e) {
+            if (e.key === PHOTOS_KEY) {
+                console.log('🔄 Deteksi perubahan foto dari tab lain, reload...');
+                loadPhoto();
+            }
+        });
+
+        let lastPhotoCount = 0;
+        setInterval(() => {
+            try {
+                const saved = localStorage.getItem(PHOTOS_KEY);
+                if (saved) {
+                    const newPhotos = JSON.parse(saved);
+                    if (Array.isArray(newPhotos) && newPhotos.length !== lastPhotoCount) {
+                        lastPhotoCount = newPhotos.length;
+                        loadPhoto();
+                    }
+                }
+            } catch (e) { /* skip */ }
+        }, 2000);
+
+        // ================================================================
+        // 5. FRAME SLOTS
+        // ================================================================
+
         const frameOverlay = document.getElementById('frameOverlay');
         const frameSlots = document.getElementById('frameSlots');
-        const gestureIndicator = document.getElementById('gestureIndicator');
-        const gestureIcon = document.getElementById('gestureIcon');
-        const gestureText = document.getElementById('gestureText');
-        const landmarkCanvas = document.getElementById('landmarkCanvas');
-        const lctx = landmarkCanvas.getContext('2d');
-
-        let camera = null;
-        let clickCooldown = false;
-        let filterCooldown = false;
-        let isVirtualMouseActive = true;
-        let handsInstance = null;
-
-        // ── Scroll state ──
-        let scrollActive = false;
-        let lastScrollY = 0;
-        let scrollAccumulated = 0;
-        const SCROLL_THRESHOLD = 10;
-        const SCROLL_MULTIPLIER = 0.9;
-
-        // ── Pinch & two-finger thresholds ──
-        const PINCH_THRESHOLD = 0.045;
-        const TWO_FINGER_THRESHOLD = 0.055;
-
-        const frameData = [];
-        let activeFrameIndex = -1;
-
         const STORAGE_KEY = "virtual_mouse_frames";
         const ACTIVE_KEY = "virtual_mouse_active_frame";
 
-        let gestureTimeout = null;
-        let gestureHideTimeout = null;
-
-        // ================================================================
-        // 5. GENERATE DEFAULT FRAMES
-        // ================================================================
+        const frameData = [];
+        let activeFrameIndex = -1;
 
         function generateDefaultFrames() {
             const colors = [
@@ -1030,73 +1212,68 @@
             frameSlots.innerHTML = '';
             frameData.length = 0;
 
-            // baca frame dari index.html
             let savedFrames = [];
             let activeIndex = 0;
 
             try {
-                savedFrames = JSON.parse(
-                    localStorage.getItem(STORAGE_KEY) || "[]"
-                );
-
-                activeIndex = parseInt(
-                    localStorage.getItem(ACTIVE_KEY) || "0"
-                );
-
+                savedFrames = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+                activeIndex = parseInt(localStorage.getItem(ACTIVE_KEY) || "0");
             } catch (e) {
                 console.error(e);
             }
 
             for (let i = 0; i < 5; i++) {
+                const dataURL = savedFrames[i] || defaultFrames[i];
+                frameData.push({ dataURL, file: null });
 
-                const dataURL =
-                    savedFrames[i] ||
-                    defaultFrames[i];
-
-                frameData.push({
-                    dataURL,
-                    file: null
-                });
                 const slot = document.createElement('div');
                 slot.className =
                     'frame-slot relative w-16 h-16 md:w-20 md:h-20 rounded-xl border-3 border-slate-600 bg-slate-700 cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-slate-400 hover:scale-105';
                 slot.dataset.index = i;
+
                 const img = document.createElement('img');
                 img.src = dataURL;
                 img.alt = `Frame ${i+1}`;
                 img.draggable = false;
                 img.className = 'w-full h-full object-cover rounded-lg';
                 slot.appendChild(img);
+
                 const label = document.createElement('span');
-                label.className =
-                    'absolute bottom-0.5 right-1 text-[10px] font-bold text-white/60 bg-black/50 px-1.5 rounded';
+                label.className = 'absolute bottom-0.5 right-1 text-[10px] font-bold text-white/60 bg-black/50 px-1.5 rounded';
                 label.textContent = `${i+1}`;
                 slot.appendChild(label);
+
                 const check = document.createElement('span');
                 check.className =
                     'check-mark absolute bottom-0.5 left-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center';
                 check.innerHTML = '✓';
                 slot.appendChild(check);
+
                 const uploadBtn = document.createElement('button');
                 uploadBtn.className =
                     'frame-upload-btn absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-blue-600 transition-opacity';
                 uploadBtn.innerHTML = '<i class="fa-solid fa-upload"></i>';
                 uploadBtn.type = 'button';
                 slot.appendChild(uploadBtn);
+
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = 'image/*';
                 fileInput.className = 'frame-file-input';
                 fileInput.dataset.index = i;
                 slot.appendChild(fileInput);
+
                 slot.addEventListener('click', function(e) {
                     if (e.target.closest('.frame-upload-btn')) return;
-                    selectFrame(i);
+                    const idx = parseInt(this.dataset.index);
+                    selectFrame(idx);
                 });
+
                 uploadBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     fileInput.click();
                 });
+
                 fileInput.addEventListener('change', function(e) {
                     const idx = parseInt(this.dataset.index);
                     const file = this.files[0];
@@ -1113,6 +1290,7 @@
                     };
                     reader.readAsDataURL(file);
                 });
+
                 frameSlots.appendChild(slot);
             }
             selectFrame(activeIndex);
@@ -1125,12 +1303,7 @@
                 slots[index].classList.add('active');
                 activeFrameIndex = index;
                 localStorage.setItem(ACTIVE_KEY, index);
-                localStorage.setItem(
-                    STORAGE_KEY,
-                    JSON.stringify(
-                        frameData.map(f => f.dataURL)
-                    )
-                );
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(frameData.map(f => f.dataURL)));
                 const data = frameData[index]?.dataURL;
                 if (data) applyFrameOverlay(data);
                 else clearFrameOverlay();
@@ -1157,6 +1330,10 @@
         // ================================================================
         // 6. GESTURE INDICATOR
         // ================================================================
+
+        const gestureIndicator = document.getElementById('gestureIndicator');
+        const gestureIcon = document.getElementById('gestureIcon');
+        const gestureText = document.getElementById('gestureText');
 
         function showGesture(mode, text) {
             if (!gestureIndicator) return;
@@ -1201,9 +1378,15 @@
             }
         }
 
+        let gestureTimeout = null;
+        let gestureHideTimeout = null;
+
         // ================================================================
-        // 7. FUNGSI MENGGAMBAR LANDMARK TANGAN
+        // 7. LANDMARK DRAWING
         // ================================================================
+
+        const landmarkCanvas = document.getElementById('landmarkCanvas');
+        const lctx = landmarkCanvas.getContext('2d');
 
         function resizeLandmarkCanvas() {
             const container = landmarkCanvas.parentElement;
@@ -1231,12 +1414,9 @@
             }
 
             lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
-
-            // Fungsi mirror x (karena video di-scaleX(-1))
             const mx = (x) => (1 - x) * w;
             const my = (y) => y * h;
 
-            // ── Connections (skeleton) ──
             const connections = [
                 [0, 1],
                 [1, 2],
@@ -1263,7 +1443,6 @@
                 [13, 17]
             ];
 
-            // Gambar skeleton dengan glow
             lctx.shadowColor = 'rgba(107, 203, 255, 0.35)';
             lctx.shadowBlur = 10;
             lctx.lineWidth = 2.8;
@@ -1284,15 +1463,7 @@
                 lctx.stroke();
             }
 
-            // ── Landmark points ──
-            const fingerColors = [
-                '#ff6b6b', // 0-4: ibu jari
-                '#ff9f43', // 5-8: telunjuk
-                '#ffd93d', // 9-12: tengah
-                '#6bcb6b', // 13-16: manis
-                '#6bcbff', // 17-20: kelingking
-            ];
-
+            const fingerColors = ['#ff6b6b', '#ff9f43', '#ffd93d', '#6bcb6b', '#6bcbff'];
             lctx.shadowColor = 'rgba(255,255,255,0.25)';
             lctx.shadowBlur = 12;
 
@@ -1325,7 +1496,6 @@
                 lctx.fillStyle = '#ffffff';
                 lctx.fill();
 
-                // Label ujung jari
                 if (isTip) {
                     const labels = ['IB', 'TJ', 'TG', 'MN', 'KL'];
                     const idx = Math.floor(i / 4);
@@ -1338,7 +1508,6 @@
                 }
             }
 
-            // ── Pergelangan tangan (0) dengan highlight ──
             const wrist = landmarks[0];
             if (wrist) {
                 const wx = mx(wrist.x);
@@ -1366,9 +1535,24 @@
         }
 
         // ================================================================
-        // 8. VIRTUAL MOUSE - MEDIAPIPE HANDS + LANDMARK
-        //    GESTUR: cubit=klik, 2 rapat=scroll, 3=next animal (5 dihapus)
+        // 8. VIRTUAL MOUSE
         // ================================================================
+
+        const cursor = document.getElementById('cursor');
+        const video = document.getElementById('video');
+
+        let camera = null;
+        let clickCooldown = false;
+        let filterCooldown = false;
+        let isVirtualMouseActive = true;
+        let handsInstance = null;
+        let scrollActive = false;
+        let lastScrollY = 0;
+        let scrollAccumulated = 0;
+        const SCROLL_THRESHOLD = 10;
+        const SCROLL_MULTIPLIER = 0.9;
+        const PINCH_THRESHOLD = 0.045;
+        const TWO_FINGER_THRESHOLD = 0.055;
 
         function initVirtualMouse() {
             if (!video) return;
@@ -1386,12 +1570,10 @@
                 });
 
                 handsInstance.onResults(function(results) {
-                    // ── Gambar landmark di canvas ──
                     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                         const hand = results.multiHandLandmarks[0];
                         drawHandLandmarks(hand);
                     } else {
-                        // Tidak ada tangan: bersihkan canvas
                         lctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
                         if (cursor) cursor.style.display = 'none';
                         hideGesture();
@@ -1412,7 +1594,6 @@
                     const x = (1 - indexFinger.x) * window.innerWidth;
                     const y = indexFinger.y * window.innerHeight;
 
-                    // ── Update cursor ──
                     if (cursor) {
                         cursor.style.display = 'block';
                         cursor.style.left = x + 'px';
@@ -1421,29 +1602,26 @@
                         cursor.classList.add('idle-mode');
                     }
 
-                    // ── Jarak pinch (ibu jari - telunjuk) ──
                     const pinchDist = Math.hypot(
                         thumbTip.x - indexFinger.x,
                         thumbTip.y - indexFinger.y,
                         thumbTip.z - indexFinger.z
                     );
 
-                    // ── Jarak 2 jari rapat (telunjuk - tengah) ──
                     const twoFingerDist = Math.hypot(
                         indexFinger.x - middleTip.x,
                         indexFinger.y - middleTip.y,
                         indexFinger.z - middleTip.z
                     );
 
-                    // ── Hitung jumlah jari terbuka ──
                     let fingerCount = 0;
-                    if (hand[8].y < hand[6].y) fingerCount++; // index
-                    if (hand[12].y < hand[10].y) fingerCount++; // middle
-                    if (hand[16].y < hand[14].y) fingerCount++; // ring
-                    if (hand[20].y < hand[18].y) fingerCount++; // pinky
-                    if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++; // thumb
+                    if (hand[8].y < hand[6].y) fingerCount++;
+                    if (hand[12].y < hand[10].y) fingerCount++;
+                    if (hand[16].y < hand[14].y) fingerCount++;
+                    if (hand[20].y < hand[18].y) fingerCount++;
+                    if (Math.abs(hand[4].x - hand[2].x) > 0.08) fingerCount++;
 
-                    // ── GESTURE 1: KLIK (cubit / pinch) ──
+                    // ── KLIK ──
                     if (pinchDist < PINCH_THRESHOLD && !clickCooldown) {
                         clickCooldown = true;
                         if (cursor) {
@@ -1466,7 +1644,7 @@
                             }
                         }, 600);
                     }
-                    // ── GESTURE 2: SCROLL (2 jari rapat, bukan pinch) ──
+                    // ── SCROLL ──
                     else if (twoFingerDist < TWO_FINGER_THRESHOLD && pinchDist > PINCH_THRESHOLD) {
                         const currentY = indexFinger.y * window.innerHeight;
                         if (!scrollActive) {
@@ -1491,9 +1669,8 @@
                             lastScrollY = currentY;
                         }
                     }
-                    // ── GESTURE LAINNYA (berdasarkan jumlah jari) ──
+                    // ── GESTURE LAIN ──
                     else {
-                        // Reset scroll state
                         if (scrollActive) {
                             scrollActive = false;
                             scrollAccumulated = 0;
@@ -1503,7 +1680,7 @@
                             }
                         }
 
-                        // ── 3 jari: NEXT ANIMAL ──
+                        // 3 jari: NEXT ANIMAL
                         if (fingerCount === 3 && typeof window.nextAnimal === 'function' && !filterCooldown) {
                             filterCooldown = true;
                             if (cursor) {
@@ -1521,13 +1698,9 @@
                             }, 1500);
                         }
 
-                        // ── 1 jari: idle (cursor bergerak) ──
                         if (fingerCount === 1) {
                             showGesture('idle', '👆 1 jari: gerak kursor');
-                        } else if (fingerCount === 0) {
-                            // tidak ada tangan terbuka
                         }
-                        // 5 jari DIHAPUS (tidak ada aksi)
                     }
                 });
 
@@ -1561,16 +1734,33 @@
         }
 
         // ================================================================
-        // 10. INISIALISASI
+        // 10. SHOW HINT
+        // ================================================================
+
+        let hintTimeoutFn = null;
+
+        function showHint(text, duration = 1200) {
+            const hint = document.getElementById('gestureHint');
+            if (!hint) return;
+            hint.textContent = text;
+            hint.classList.add('show');
+            clearTimeout(hintTimeoutFn);
+            hintTimeoutFn = setTimeout(() => {
+                hint.classList.remove('show');
+            }, duration);
+        }
+
+        // ================================================================
+        // 11. INISIALISASI
         // ================================================================
 
         document.addEventListener('DOMContentLoaded', function() {
             renderAnimals();
             initFrameSlots();
+            loadPhoto(); // Load foto dari localStorage
             startCameraDisplay();
             initVirtualMouse();
 
-            // Resize canvas landmark
             setTimeout(() => {
                 resizeLandmarkCanvas();
             }, 500);
@@ -1583,8 +1773,7 @@
 
             if (cursor) cursor.style.display = 'block';
             console.log('🐾 Hewan.html siap — cubit=klik, 2 rapat=scroll, 3=next animal');
-            console.log('📁 Pastikan file gambar ada di folder ./assets/animals/');
-            console.log('🗑️ Gestur 5 jari untuk foto telah dihapus.');
+            console.log('📸 Foto dari index.html muncul di samping video dengan ukuran yang sama.');
         });
 
         window.addEventListener('resize', function() {});
