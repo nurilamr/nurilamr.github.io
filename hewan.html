@@ -70,9 +70,12 @@
         /* ── Video mirror ── */
         #video {
             transform: scaleX(-1);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* ── Animal card (diperbesar) ── */
+        /* ── Animal card ── */
         .animal-card {
             transition: all 0.3s ease;
             cursor: pointer;
@@ -470,7 +473,7 @@
             flex-shrink: 0;
         }
 
-        /* ── Container video + foto (diperbesar) ── */
+        /* ── Container video + foto (diperbaiki agar sama persis) ── */
         .video-photo-wrapper {
             display: flex;
             flex-direction: column;
@@ -482,21 +485,22 @@
         @media (min-width: 768px) {
             .video-photo-wrapper {
                 flex-direction: row;
-                align-items: stretch;
                 gap: 24px;
             }
         }
 
-        .video-container {
-            position: relative;
-            flex: 1;
-            aspect-ratio: 4 / 3;
+        .video-container,
+        .photo-container {
+            flex: 1 1 0;          /* lebar sama */
+            aspect-ratio: 4 / 3;   /* rasio sama */
             border-radius: 16px;
             overflow: hidden;
-            background: #0a0a0a;
+            background: #0f172a;
             border: 2px solid #334155;
-            min-width: 0;
+            position: relative;
+            min-width: 0;          /* mencegah overflow */
         }
+
         .video-container video,
         .video-container canvas {
             position: absolute;
@@ -510,29 +514,27 @@
         .video-container #landmarkCanvas {
             width: 100%;
             height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            border-radius: 15px;
         }
 
+        /* ── Photo container ── */
         .photo-container {
-            flex: 1;
-            aspect-ratio: 4 / 3;
-            border-radius: 16px;
-            overflow: hidden;
+            display: block;          /* hilangkan flex agar gambar full */
             background: #0f172a;
-            border: 2px solid #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            min-width: 0;
         }
+
         .photo-container .empty-photo {
-            text-align: center;
-            color: #475569;
+            position: absolute;
+            inset: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            color: #475569;
             gap: 8px;
-            padding: 16px;
+            background: #0f172a;
         }
         .photo-container .empty-photo i {
             font-size: 32px;
@@ -541,12 +543,14 @@
         .photo-container .empty-photo span {
             font-size: 13px;
         }
+
         .photo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
+
         .photo-container .photo-badge-overlay {
             position: absolute;
             bottom: 8px;
@@ -561,6 +565,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            z-index: 2;
         }
         .photo-container .photo-badge-overlay .del-btn {
             background: rgba(239, 68, 68, 0.8);
@@ -632,7 +637,7 @@
             }
         }
 
-        /* ── User Greeting di Sidebar ── */
+        /* ── User Greeting ── */
         .user-greeting {
             display: inline-flex;
             align-items: center;
@@ -793,7 +798,7 @@
                             <i class="fa-regular fa-image"></i>
                             <span>Belum ada foto</span>
                         </div>
-                        <img id="photoDisplay" class="hidden w-full h-full object-cover" alt="Foto" />
+                        <img id="photoDisplay" class="hidden" alt="Foto" />
                         <div id="photoBadge" class="photo-badge-overlay hidden">
                             <span id="photoIdLabel">#0</span>
                             <button class="del-btn" id="deletePhotoBtn" title="Hapus foto ini">
@@ -804,14 +809,13 @@
                 </div>
             </div>
 
-            <!-- ─── GRID HEWAN (diperbesar) ─── -->
+            <!-- ─── GRID HEWAN ─── -->
             <div class="bg-slate-800 rounded-2xl shadow-2xl p-5 md:p-6">
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-list text-emerald-400"></i>
                     Daftar Hewan
                     <span class="text-sm font-normal text-slate-400 ml-auto">3 jari = next hewan</span>
                 </h2>
-                <!-- Mengurangi jumlah kolom agar setiap card lebih besar -->
                 <div id="animalGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                     <!-- Akan di-generate oleh JS -->
                 </div>
@@ -1659,9 +1663,9 @@
         // ================================================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            loadUserName(); // Load nama user dari localStorage
+            loadUserName();
             renderAnimals();
-            loadPhoto(); // Load foto dari localStorage
+            loadPhoto();
             startCameraDisplay();
             initVirtualMouse();
 
