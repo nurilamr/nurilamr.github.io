@@ -112,15 +112,8 @@
             letter-spacing: 2px;
         }
         @keyframes pulse {
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.15);
-                opacity: 0.7;
-            }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
         }
         #countdownProgress {
             width: 120px;
@@ -155,12 +148,8 @@
             animation: flash 0.3s ease-out forwards;
         }
         @keyframes flash {
-            0% {
-                opacity: 0.9;
-            }
-            100% {
-                opacity: 0;
-            }
+            0% { opacity: 0.9; }
+            100% { opacity: 0; }
         }
 
         /* ── Frame slots ── */
@@ -205,15 +194,9 @@
             align-items: center;
             gap: 10px;
         }
-        #scrollIndicator.show {
-            opacity: 1;
-        }
-        #scrollIndicator .arrow-up {
-            color: #4ade80;
-        }
-        #scrollIndicator .arrow-down {
-            color: #f87171;
-        }
+        #scrollIndicator.show { opacity: 1; }
+        #scrollIndicator .arrow-up { color: #4ade80; }
+        #scrollIndicator .arrow-down { color: #f87171; }
 
         /* ── Gesture hint ── */
         #gestureHint {
@@ -237,13 +220,8 @@
             text-align: center;
             white-space: nowrap;
         }
-        #gestureHint.show {
-            opacity: 1;
-        }
-        #gestureHint .highlight {
-            color: #60a5fa;
-            font-weight: 700;
-        }
+        #gestureHint.show { opacity: 1; }
+        #gestureHint .highlight { color: #60a5fa; font-weight: 700; }
 
         /* ── Legend landmark ── */
         #landmarkLegend {
@@ -263,18 +241,8 @@
             pointer-events: none;
             border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        #landmarkLegend .row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #landmarkLegend .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            flex-shrink: 0;
-        }
+        #landmarkLegend .row { display: flex; align-items: center; gap: 6px; }
+        #landmarkLegend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
         /* ── Video wrapper ── */
         .video-wrapper {
@@ -295,13 +263,8 @@
             width: 100%;
             height: 100%;
         }
-        .video-wrapper video {
-            object-fit: cover;
-        }
-        .video-wrapper #landmarkCanvas {
-            width: 100%;
-            height: 100%;
-        }
+        .video-wrapper video { object-fit: cover; }
+        .video-wrapper #landmarkCanvas { width: 100%; height: 100%; }
 
         /* ── Photo gallery ── */
         #photoGallery {
@@ -329,10 +292,7 @@
             align-items: center;
             gap: 6px;
         }
-        #photoGallery .empty-gallery i {
-            font-size: 28px;
-            color: #334155;
-        }
+        #photoGallery .empty-gallery i { font-size: 28px; color: #334155; }
         #photoGallery .photo-item {
             width: calc(25% - 8px);
             min-width: 70px;
@@ -349,12 +309,7 @@
             transform: scale(1.02);
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
         }
-        #photoGallery .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+        #photoGallery .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         #photoGallery .photo-item .photo-index {
             position: absolute;
             bottom: 4px;
@@ -385,13 +340,8 @@
             transition: 0.2s;
             backdrop-filter: blur(4px);
         }
-        #photoGallery .photo-item:hover .delete-photo {
-            display: flex;
-        }
-        #photoGallery .photo-item .delete-photo:hover {
-            background: #ef4444;
-            transform: scale(1.15);
-        }
+        #photoGallery .photo-item:hover .delete-photo { display: flex; }
+        #photoGallery .photo-item .delete-photo:hover { background: #ef4444; transform: scale(1.15); }
         #photoGallery .photo-item .photo-timestamp {
             position: absolute;
             bottom: 4px;
@@ -406,10 +356,7 @@
         }
 
         @media (max-width: 480px) {
-            #photoGallery .photo-item {
-                width: calc(33.33% - 8px);
-                min-width: 60px;
-            }
+            #photoGallery .photo-item { width: calc(33.33% - 8px); min-width: 60px; }
         }
 
         /* key btn */
@@ -418,14 +365,8 @@
             text-align: center;
         }
         @media (max-width: 480px) {
-            .key-btn {
-                min-width: 26px;
-                font-size: 11px;
-                padding: 0 4px;
-            }
-            #countdownNumber {
-                font-size: 56px;
-            }
+            .key-btn { min-width: 26px; font-size: 11px; padding: 0 4px; }
+            #countdownNumber { font-size: 56px; }
         }
 
         /* ── Badge foto ── */
@@ -449,13 +390,8 @@
             animation: blink 1s ease-in-out infinite;
         }
         @keyframes blink {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
     </style>
 </head>
@@ -484,10 +420,9 @@
                         <span class="dot"></span>
                         <span id="photoCountBadge">0 foto</span>
                     </span>
-
                 </div>
 
-                <!-- INPUT NAMA AKTIF (tanpa readonly) -->
+                <!-- INPUT NAMA -->
                 <input type="text" id="nameInput" placeholder="Masukkan Nama"
                 class="w-full h-12 md:h-14 border-none outline-none rounded-xl px-4 text-base md:text-lg bg-white text-slate-900 mb-5 shadow-inner" />
 
@@ -509,7 +444,7 @@
 
 <!-- ─── CAMERA BOX (kanan) ─── -->
 <div class="w-full max-w-2xl bg-slate-800 rounded-2xl shadow-2xl p-4 flex flex-col items-center">
-    <!-- Video wrapper dengan landmark canvas -->
+    <!-- Video wrapper -->
     <div class="video-wrapper">
         <video id="video" autoplay playsinline muted></video>
         <canvas id="landmarkCanvas"></canvas>
@@ -522,7 +457,7 @@
             <div id="countdownProgress"><div class="bar" id="countdownBar"></div></div>
         </div>
 
-        <!-- Legend kecil -->
+        <!-- Legend -->
         <div id="landmarkLegend">
             <div class="row"><span class="dot" style="background:#ff6b6b;"></span> Landmark</div>
             <div class="row"><span class="dot" style="background:#ffd93d;"></span> Ujung jari</div>
@@ -596,7 +531,6 @@
 
     let camera = null;
     let clickCooldown = false;
-    let filterCooldown = false;
     let photoCooldown = false;
     let handsInstance = null;
     let scrollPrevY = null;
@@ -604,21 +538,18 @@
     let hintTimeout = null;
     let canvasResizeObserver = null;
 
-    // ── Photo state ──
+    // ── State ──
     let photos = [];
     let isCountingDown = false;
     let countdownTimer = null;
-
-    const frameData = [];
-    let activeFrameIndex = -1;
-    let isRestoring = false;
+    let activeFrameIndex = 0;
+    let filterImageElement = null; // Referensi ke elemen img filter yang aktif
 
     // ================================================================
     // 2. STORAGE KEY
     // ================================================================
 
-    const STORAGE_KEY = 'virtual_mouse_frames';
-    const ACTIVE_KEY = 'virtual_mouse_active_frame';
+    const ACTIVE_KEY = 'virtual_mouse_active_frame_v2';
     const PHOTOS_KEY = 'virtual_mouse_photos';
     const USER_NAME_KEY = 'virtual_mouse_user_name';
 
@@ -627,159 +558,62 @@
     // ================================================================
 
     const FILTER_CONFIG = [
-        { name: 'Burung', file: 'burung.png', emoji: '🦅' },
-        { name: 'Kucing', file: 'cat.png', emoji: '🐱' },
-        { name: 'Harimau', file: 'harimau.png', emoji: '🐯' },
-        { name: 'Kelinci', file: 'kelinci.png', emoji: '🐰' },
-        { name: 'Panda', file: 'panda.png', emoji: '🐼' }
+        { id: 0, name: 'Burung', file: 'burung.png', emoji: '🦅', path: './assets/filter/burung.png' },
+        { id: 1, name: 'Kucing', file: 'cat.png', emoji: '🐱', path: './assets/filter/cat.png' },
+        { id: 2, name: 'Harimau', file: 'harimau.png', emoji: '🐯', path: './assets/filter/harimau.png' },
+        { id: 3, name: 'Kelinci', file: 'kelinci.png', emoji: '🐰', path: './assets/filter/kelinci.png' },
+        { id: 4, name: 'Panda', file: 'panda.png', emoji: '🐼', path: './assets/filter/panda.png' }
     ];
 
-    function getFilterPath(index) {
-        if (index >= 0 && index < FILTER_CONFIG.length) {
-            return `./assets/filter/${FILTER_CONFIG[index].file}`;
-        }
-        return '';
-    }
-
     // ================================================================
-    // 4. SAVE / LOAD FRAME DATA
-    // ================================================================
-
-    function saveFrameData() {
-        if (isRestoring) return;
-        try {
-            // Simpan hanya dataURL yang sudah dimuat (bukan path)
-            const dataURLs = frameData.map(f => f.dataURL || '');
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataURLs));
-            localStorage.setItem(ACTIVE_KEY, String(activeFrameIndex));
-            console.log('💾 Frame data saved:', dataURLs.map(d => d ? 'loaded' : 'empty'));
-        } catch (e) {
-            console.warn('Gagal menyimpan frame:', e);
-        }
-    }
-
-    function loadFrameData() {
-        isRestoring = true;
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const dataURLs = JSON.parse(saved);
-                if (Array.isArray(dataURLs)) {
-                    for (let i = 0; i < Math.min(dataURLs.length, frameData.length); i++) {
-                        // Hanya restore jika dataURL valid (bukan empty string)
-                        if (dataURLs[i] && dataURLs[i].startsWith('data:image')) {
-                            frameData[i].dataURL = dataURLs[i];
-                            frameData[i].loaded = true;
-                            const slots = document.querySelectorAll('.frame-slot');
-                            if (slots[i]) {
-                                const img = slots[i].querySelector('img');
-                                if (img) img.src = dataURLs[i];
-                            }
-                        }
-                    }
-                }
-            }
-
-            const savedIndex = localStorage.getItem(ACTIVE_KEY);
-            let idx = 0;
-            if (savedIndex !== null && savedIndex !== undefined) {
-                const parsed = parseInt(savedIndex, 10);
-                if (!isNaN(parsed) && parsed >= 0 && parsed < frameData.length) {
-                    idx = parsed;
-                }
-            }
-            selectFrameInternal(idx, true);
-        } catch (e) {
-            console.warn('Gagal memuat frame:', e);
-            selectFrameInternal(0, true);
-        } finally {
-            isRestoring = false;
-        }
-    }
-
-    // ================================================================
-    // 5. FRAME SLOTS
+    // 4. FRAME SLOTS
     // ================================================================
 
     function initFrameSlots() {
         frameSlots.innerHTML = '';
-        frameData.length = 0;
 
-        for (let i = 0; i < FILTER_CONFIG.length; i++) {
-            const filterPath = getFilterPath(i);
-            const filterInfo = FILTER_CONFIG[i];
-            
-            frameData.push({ 
-                dataURL: '', 
-                path: filterPath,
-                loaded: false,
-                name: filterInfo.name,
-                emoji: filterInfo.emoji
-            });
-
+        FILTER_CONFIG.forEach((filter, index) => {
             const slot = document.createElement('div');
             slot.className =
                 'frame-slot relative w-16 h-16 md:w-20 md:h-20 rounded-xl border-3 border-slate-600 bg-slate-700 cursor-pointer overflow-hidden flex items-center justify-center transition-all hover:border-slate-400 hover:scale-105';
-            slot.dataset.index = i;
+            slot.dataset.index = index;
 
             const img = document.createElement('img');
-            img.alt = filterInfo.name;
+            img.alt = filter.name;
             img.draggable = false;
             img.className = 'w-full h-full object-cover rounded-lg';
-            img.src = filterPath;
+            img.crossOrigin = 'anonymous';
+            img.src = filter.path;
             
             img.onload = function() {
-                // Gambar berhasil dimuat
-                frameData[i].dataURL = this.src;
-                frameData[i].loaded = true;
-                // Hapus fallback jika ada
-                const fallback = this.parentNode.querySelector('.filter-fallback');
-                if (fallback) fallback.remove();
-                // Jika ini adalah frame aktif, update overlay
-                if (activeFrameIndex === i) {
+                console.log(`✅ Filter ${index+1}: ${filter.name} dimuat`);
+                // Jika ini adalah frame aktif, simpan referensi
+                if (activeFrameIndex === index) {
+                    filterImageElement = this;
                     applyFrameOverlay(this.src);
                 }
-                saveFrameData();
-                console.log(`✅ Filter ${i+1} (${filterInfo.name}) loaded successfully`);
+                saveActiveFrame(index);
             };
             
             img.onerror = function() {
-                // Fallback: tampilkan emoji + nama
+                console.warn(`⚠️ Filter ${index+1}: ${filter.name} tidak ditemukan`);
+                this.style.display = 'none';
                 const fallback = document.createElement('div');
-                fallback.className = 'filter-fallback absolute inset-0 flex flex-col items-center justify-center bg-slate-800';
-                fallback.style.zIndex = '2';
-                
-                const emojiSpan = document.createElement('span');
-                emojiSpan.textContent = filterInfo.emoji;
-                emojiSpan.style.fontSize = '24px';
-                fallback.appendChild(emojiSpan);
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = filterInfo.name;
-                nameSpan.style.fontSize = '10px';
-                nameSpan.style.color = 'rgba(255,255,255,0.5)';
-                nameSpan.style.marginTop = '2px';
-                fallback.appendChild(nameSpan);
-                
-                this.parentNode.appendChild(fallback);
-                console.warn(`⚠️ Filter ${i+1} (${filterInfo.name}) not found at: ${filterPath}`);
+                fallback.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-800';
+                fallback.innerHTML = `
+                    <span style="font-size:28px;">${filter.emoji}</span>
+                    <span style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">${filter.name}</span>
+                `;
+                slot.appendChild(fallback);
             };
             
             slot.appendChild(img);
 
-            // Label nomor
             const label = document.createElement('span');
             label.className = 'absolute bottom-0.5 right-1 text-[10px] font-bold text-white/60 bg-black/50 px-1.5 rounded';
-            label.textContent = `${i+1}`;
+            label.textContent = `${index+1}`;
             slot.appendChild(label);
 
-            // Emoji di pojok kiri atas
-            const emojiLabel = document.createElement('span');
-            emojiLabel.className = 'absolute top-0.5 left-1 text-[10px] font-bold text-white/60';
-            emojiLabel.textContent = filterInfo.emoji;
-            slot.appendChild(emojiLabel);
-
-            // Check mark
             const check = document.createElement('span');
             check.className =
                 'check-mark absolute bottom-0.5 left-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center';
@@ -792,71 +626,72 @@
             });
 
             frameSlots.appendChild(slot);
-        }
+        });
 
-        // Load frame data dari localStorage
-        loadFrameData();
-
-        // Jika tidak ada frame aktif, pilih yang pertama
-        if (activeFrameIndex < 0) {
-            selectFrameInternal(0, true);
+        loadActiveFrame();
+        if (activeFrameIndex < 0 || activeFrameIndex >= FILTER_CONFIG.length) {
+            activeFrameIndex = 0;
         }
+        selectFrame(activeFrameIndex, true);
     }
 
     // ================================================================
-    // 6. FUNGSI FRAME
+    // 5. FUNGSI FRAME
     // ================================================================
 
-    function selectFrameInternal(index, silent) {
+    function saveActiveFrame(index) {
+        try {
+            localStorage.setItem(ACTIVE_KEY, String(index));
+        } catch (e) {}
+    }
+
+    function loadActiveFrame() {
+        try {
+            const saved = localStorage.getItem(ACTIVE_KEY);
+            if (saved !== null) {
+                const parsed = parseInt(saved, 10);
+                if (!isNaN(parsed) && parsed >= 0 && parsed < FILTER_CONFIG.length) {
+                    activeFrameIndex = parsed;
+                    console.log(`📂 Active frame: ${activeFrameIndex}`);
+                    return;
+                }
+            }
+        } catch (e) {}
+        activeFrameIndex = 0;
+    }
+
+    function selectFrame(index, silent = false) {
+        if (index < 0 || index >= FILTER_CONFIG.length) {
+            index = 0;
+        }
+
         document.querySelectorAll('.frame-slot').forEach(el => el.classList.remove('active'));
         const slots = document.querySelectorAll('.frame-slot');
         if (slots[index]) {
             slots[index].classList.add('active');
             activeFrameIndex = index;
             
-            // Coba gunakan dataURL yang sudah dimuat
-            let data = frameData[index]?.dataURL;
-            
-            // Jika belum dimuat, coba load dari path
-            if (!data && frameData[index]?.path) {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = function() {
-                    frameData[index].dataURL = img.src;
-                    frameData[index].loaded = true;
-                    applyFrameOverlay(img.src);
-                    saveFrameData();
-                    console.log(`✅ Filter ${index+1} loaded on select`);
-                };
-                img.onerror = function() {
-                    console.warn(`⚠️ Failed to load filter ${index+1} from path: ${frameData[index].path}`);
-                    applyFrameOverlay(null);
-                };
-                img.src = frameData[index].path;
-            } else if (data) {
-                applyFrameOverlay(data);
-            } else {
-                clearFrameOverlay();
+            const img = slots[index].querySelector('img');
+            if (img && img.src) {
+                // SIMPAN REFERENSI KE ELEMEN IMG
+                filterImageElement = img;
+                applyFrameOverlay(img.src);
+                console.log(`🖼️ Filter aktif: ${FILTER_CONFIG[index].name}, elemen img:`, img);
             }
             
-            if (!silent) saveFrameData();
-        } else {
-            activeFrameIndex = -1;
-            clearFrameOverlay();
-            if (!silent) saveFrameData();
+            saveActiveFrame(index);
+            
+            if (!silent) {
+                showHint(`🎨 ${FILTER_CONFIG[index].emoji} ${FILTER_CONFIG[index].name}`, 1000);
+            }
         }
-    }
-
-    function selectFrame(index) {
-        selectFrameInternal(index, false);
     }
 
     function applyFrameOverlay(dataURL) {
         if (!frameOverlay) return;
-        if (dataURL) {
+        if (dataURL && dataURL !== '') {
             frameOverlay.style.backgroundImage = `url(${dataURL})`;
             frameOverlay.style.display = 'block';
-            console.log('🖼️ Frame overlay applied');
         } else {
             clearFrameOverlay();
         }
@@ -866,11 +701,10 @@
         if (!frameOverlay) return;
         frameOverlay.style.backgroundImage = '';
         frameOverlay.style.display = 'none';
-        console.log('🖼️ Frame overlay cleared');
     }
 
     // ================================================================
-    // 7. PHOTO FUNCTIONS
+    // 6. PHOTO FUNCTIONS - DIPERBAIKI
     // ================================================================
 
     function savePhotos() {
@@ -905,7 +739,7 @@
             `;
         } else {
             const sorted = [...photos].reverse();
-            sorted.forEach((photo, idx) => {
+            sorted.forEach((photo) => {
                 const div = document.createElement('div');
                 div.className = 'photo-item';
                 const img = document.createElement('img');
@@ -952,42 +786,100 @@
     }
 
     function capturePhoto() {
-        if (!video) return;
+        if (!video) {
+            console.error('❌ Video tidak ditemukan');
+            return;
+        }
 
         const w = video.videoWidth || 640;
         const h = video.videoHeight || 480;
+
+        console.log(`📷 Mengambil foto: ${w}x${h}`);
+        console.log(`🔍 Filter aktif index: ${activeFrameIndex}, elemen img:`, filterImageElement);
 
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
         const cctx = canvas.getContext('2d');
 
+        // 1. Gambar video dengan mirror
         cctx.translate(w, 0);
         cctx.scale(-1, 1);
         cctx.drawImage(video, 0, 0, w, h);
         cctx.setTransform(1, 0, 0, 1, 0, 0);
 
-        if (activeFrameIndex >= 0 && frameData[activeFrameIndex]?.dataURL) {
-            const img = new Image();
-            img.src = frameData[activeFrameIndex].dataURL;
+        // 2. Gambar filter dari elemen img yang disimpan
+        let filterApplied = false;
+        
+        if (filterImageElement && filterImageElement.complete && filterImageElement.naturalWidth > 0) {
             try {
-                cctx.drawImage(img, 0, 0, w, h);
+                cctx.drawImage(filterImageElement, 0, 0, w, h);
+                filterApplied = true;
+                console.log('✅ Filter applied to photo from filterImageElement');
             } catch (e) {
-                // skip
+                console.warn('⚠️ Gagal draw filter dari filterImageElement:', e);
+            }
+        } else {
+            console.warn('⚠️ filterImageElement tidak valid atau belum dimuat');
+            
+            // Fallback: coba ambil dari frameOverlay
+            const overlayStyle = frameOverlay.style.backgroundImage;
+            if (overlayStyle && overlayStyle.includes('url')) {
+                const urlMatch = overlayStyle.match(/url\(["']?(.*?)["']?\)/);
+                if (urlMatch && urlMatch[1]) {
+                    console.log('🔄 Fallback: mencoba dari overlay URL:', urlMatch[1]);
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = function() {
+                        try {
+                            cctx.drawImage(img, 0, 0, w, h);
+                            filterApplied = true;
+                            console.log('✅ Filter applied from overlay fallback');
+                        } catch (e) {}
+                    };
+                    img.src = urlMatch[1];
+                    try {
+                        cctx.drawImage(img, 0, 0, w, h);
+                        filterApplied = true;
+                    } catch (e) {}
+                }
+            }
+            
+            // Fallback 2: coba dari slot yang aktif
+            if (!filterApplied) {
+                const slots = document.querySelectorAll('.frame-slot');
+                if (slots[activeFrameIndex]) {
+                    const img = slots[activeFrameIndex].querySelector('img');
+                    if (img && img.complete && img.naturalWidth > 0) {
+                        try {
+                            cctx.drawImage(img, 0, 0, w, h);
+                            filterApplied = true;
+                            filterImageElement = img;
+                            console.log('✅ Filter applied from active slot');
+                        } catch (e) {}
+                    }
+                }
             }
         }
 
+        if (!filterApplied) {
+            console.log('ℹ️ Tidak ada filter yang diterapkan');
+        }
+
+        // 3. Konversi ke dataURL
         const dataURL = canvas.toDataURL('image/png');
 
         const photoObj = {
             id: Date.now(),
             dataURL: dataURL,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            filter: activeFrameIndex >= 0 ? FILTER_CONFIG[activeFrameIndex].name : 'Tanpa Filter'
         };
         photos.push(photoObj);
         savePhotos();
         renderPhotos();
 
+        // Flash effect
         flashOverlay.classList.remove('active');
         void flashOverlay.offsetWidth;
         flashOverlay.classList.add('active');
@@ -995,8 +887,8 @@
             flashOverlay.classList.remove('active');
         }, 400);
 
-        showHint('📸 Foto berhasil diambil!', 1200);
-        console.log('📸 Foto diambil:', photoObj.id);
+        showHint(`📸 Foto berhasil! ${photoObj.filter}`, 1200);
+        console.log('📸 Foto diambil:', photoObj.id, 'filter:', photoObj.filter);
     }
 
     // ── COUNTDOWN ──
@@ -1060,7 +952,7 @@
     }
 
     // ================================================================
-    // 8. START GAME
+    // 7. START GAME
     // ================================================================
 
     function startGame() {
@@ -1072,7 +964,7 @@
     }
 
     // ================================================================
-    // 9. KEYBOARD VIRTUAL
+    // 8. KEYBOARD VIRTUAL
     // ================================================================
 
     const keys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
@@ -1089,8 +981,9 @@
                 'key-btn h-10 md:h-12 rounded-lg bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium transition-colors';
             btn.onclick = function() {
                 if (!input) return;
-                if (key === 'SPACE') { input.value += ' '; } else if (key === '⌫') { input.value = input.value
-                        .slice(0, -1); } else { input.value += key; }
+                if (key === 'SPACE') { input.value += ' '; } 
+                else if (key === '⌫') { input.value = input.value.slice(0, -1); } 
+                else { input.value += key; }
                 const evt = new Event('input', { bubbles: true });
                 input.dispatchEvent(evt);
             };
@@ -1105,7 +998,7 @@
     }
 
     // ================================================================
-    // 10. SHOW HINT
+    // 9. SHOW HINT
     // ================================================================
 
     function showHint(text, duration = 1200) {
@@ -1119,7 +1012,7 @@
     }
 
     // ================================================================
-    // 11. SCROLL INDICATOR
+    // 10. SCROLL INDICATOR
     // ================================================================
 
     let scrollIndicatorTimeout = null;
@@ -1149,7 +1042,7 @@
     }
 
     // ================================================================
-    // 12. RESIZE CANVAS
+    // 11. RESIZE CANVAS
     // ================================================================
 
     function resizeLandmarkCanvas() {
@@ -1170,7 +1063,7 @@
     }
 
     // ================================================================
-    // 13. DRAW HAND LANDMARKS
+    // 12. DRAW HAND LANDMARKS
     // ================================================================
 
     function drawHandLandmarks(landmarks) {
@@ -1184,29 +1077,12 @@
         ctx.clearRect(0, 0, landmarkCanvas.width, landmarkCanvas.height);
 
         const connections = [
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 4],
-            [0, 5],
-            [5, 6],
-            [6, 7],
-            [7, 8],
-            [0, 9],
-            [9, 10],
-            [10, 11],
-            [11, 12],
-            [0, 13],
-            [13, 14],
-            [14, 15],
-            [15, 16],
-            [0, 17],
-            [17, 18],
-            [18, 19],
-            [19, 20],
-            [5, 9],
-            [9, 13],
-            [13, 17]
+            [0, 1], [1, 2], [2, 3], [3, 4],
+            [0, 5], [5, 6], [6, 7], [7, 8],
+            [0, 9], [9, 10], [10, 11], [11, 12],
+            [0, 13], [13, 14], [14, 15], [15, 16],
+            [0, 17], [17, 18], [18, 19], [19, 20],
+            [5, 9], [9, 13], [13, 17]
         ];
 
         const mx = (x) => (1 - x) * w;
@@ -1222,24 +1098,13 @@
             const p1 = landmarks[i];
             const p2 = landmarks[j];
             if (!p1 || !p2) continue;
-            const x1 = mx(p1.x);
-            const y1 = my(p1.y);
-            const x2 = mx(p2.x);
-            const y2 = my(p2.y);
             ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
+            ctx.moveTo(mx(p1.x), my(p1.y));
+            ctx.lineTo(mx(p2.x), my(p2.y));
             ctx.stroke();
         }
 
-        const fingerColors = [
-            '#ff6b6b',
-            '#ff9f43',
-            '#ffd93d',
-            '#6bcb6b',
-            '#6bcbff'
-        ];
-
+        const fingerColors = ['#ff6b6b', '#ff9f43', '#ffd93d', '#6bcb6b', '#6bcbff'];
         ctx.shadowColor = 'rgba(255,255,255,0.3)';
         ctx.shadowBlur = 10;
 
@@ -1314,7 +1179,7 @@
     }
 
     // ================================================================
-    // 14. MEDIAPIPE HANDS — Virtual Mouse + Landmark + Photo
+    // 13. MEDIAPIPE HANDS
     // ================================================================
 
     if (video) {
@@ -1455,12 +1320,8 @@
 
             window.addEventListener('resize', resizeLandmarkCanvas);
 
-            console.log('✅ Virtual Mouse + Landmark + Photo aktif!');
-            console.log('📌 Gestur: cubit=klik, 2 jari rapat=gulir, 5 jari=foto (countdown 5 detik)');
-
-            setTimeout(() => {
-                showHint('✋ cubit = klik  ·  ✌️ 2 jari rapat = gulir  ·  🖐️ 5 jari = foto', 3000);
-            }, 1500);
+            console.log('✅ Virtual Mouse aktif!');
+            console.log('📌 Gestur: cubit=klik, 2 jari rapat=gulir, 5 jari=foto');
 
         } catch (err) {
             console.error('Gagal inisialisasi MediaPipe:', err);
@@ -1468,7 +1329,7 @@
     }
 
     // ================================================================
-    // 15. INISIALISASI
+    // 14. INISIALISASI
     // ================================================================
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1486,35 +1347,13 @@
         });
     });
 
-    // Hapus data lama di localStorage jika ada (untuk memastikan sinkronisasi)
-    try {
-        const oldData = localStorage.getItem(STORAGE_KEY);
-        if (oldData) {
-            const parsed = JSON.parse(oldData);
-            // Jika data lama berisi string yang bukan dataURL (base64 image), hapus
-            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0] && !parsed[0].startsWith('data:image')) {
-                console.log('🔄 Menghapus data frame lama...');
-                localStorage.removeItem(STORAGE_KEY);
-                localStorage.removeItem(ACTIVE_KEY);
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
-
     initFrameSlots();
     loadPhotos();
 
-    console.log('✅ Aplikasi siap — Virtual Mouse + Landmark + Photo aktif!');
-    console.log('📌 Gestur:');
-    console.log('   ✋ cubit (ibu jari + telunjuk) = klik');
-    console.log('   ✌️ 2 jari rapat (telunjuk + tengah) = gulir');
-    console.log('   🖐️ 5 jari = foto (countdown 5 detik)');
-    console.log('📸 Foto tersimpan di localStorage dan muncul di bawah video.');
-    console.log('👤 Nama user disimpan dan akan ditampilkan di halaman option.html');
-    console.log('🖼️ Filter diambil dari folder assets/filter:');
+    console.log('✅ Aplikasi siap!');
+    console.log('🖼️ Filter dari assets/filter/');
     FILTER_CONFIG.forEach((f, i) => {
-        console.log(`   ${i+1}. ${f.name} (${f.file})`);
+        console.log(`   ${i+1}. ${f.name} → ${f.path}`);
     });
 </script>
 
